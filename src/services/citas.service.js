@@ -41,8 +41,8 @@ const registrarVenta = async (data) => {
 
   if (!idCliente) {
     const [n] = await db.query(
-      "INSERT INTO clientes (id_usuario_mall, nombre_completo, correo, telefono) VALUES (?,?,?,?)",
-      [id_usuario_mall, nombre_cliente, correo, telefono]
+  "INSERT INTO clientes (id_tienda, id_usuario_mall, nombre_completo, correo, telefono) VALUES (?,?,?,?,?)",
+    [id_tienda, id_usuario_mall, nombre_cliente, correo, telefono]
     );
     idCliente = n.insertId;
   }
