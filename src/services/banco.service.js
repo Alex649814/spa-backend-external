@@ -48,7 +48,7 @@ const procesarNotificacion = async (data) => {
      WHERE id_transaccion_externa = ?`,
     [
       TipoTransaccion || null,
-      creadaMysql,               
+      creadaMysql,
       NombreComercio || null,
       nombreEstado || null,
       Mensaje || null,
@@ -56,13 +56,42 @@ const procesarNotificacion = async (data) => {
       NumeroTarjeta || null,
       NumeroAutorizacion || null,
       Firma || null,
-      idTransaccion
+      idTransaccion,
     ]
   );
 };
 
+/**
+ * Simulación de envío al banco:
+ * genera un objeto con el mismo formato que usaría procesarNotificacion.
+ */
 const enviarTransaccion = async (data) => {
-  return { mensaje: "Simulación de envío al banco" };
+  const ahora = new Date().toISOString();
+
+  const last4 =
+    data.numero_tarjeta_origen?.slice(-4) ||
+    data.numero_tarjeta_destino?.slice(-4) ||
+    "0000";
+
+  const idTransaccion =
+    data.idTransaccion || `TRX-${Date.now()}`; // por si viene desde pagos.service
+
+  return {
+    idTransaccion,
+    TipoTransaccion: "TRANSFERENCIA",
+    CreadaUTC: ahora,
+    NombreComercio: "Servicios SPA Mall",
+    nombreEstado: "ACEPTADA",
+    Mensaje: "Pago aprobado",
+    MarcaTarjeta: "VISA",
+    NumeroTarjeta: "**** **** **** " + last4,
+    NumeroAutorizacion:
+      "AUTH-" +
+      Math.floor(Math.random() * 1000000)
+        .toString()
+        .padStart(6, "0"),
+    Firma: "PIN",
+  };
 };
 
 export default { procesarNotificacion, enviarTransaccion };

@@ -1,3 +1,4 @@
+// src/services/pagos.service.js
 import db from "../db/connection.js";
 import bancoService from "./banco.service.js";
 
@@ -10,17 +11,20 @@ const enviarAlBanco = async (payload) => {
     nombre_cliente_tarjeta,
     mes_expiracion,
     anio_expiracion,
-    cvv
+    cvv,
   } = payload;
 
-  // 1. Registrar pago ligado a una cita
+  // 1) Registrar pago ligado a la cita, marcándolo como ENVIADO_BANCO
   const [pago] = await db.query(
-    `INSERT INTO pagos (id_cita, monto, tipo_pago, metodo_pago)
-     VALUES (?, ?, 'COMPLETO', 'TARJETA')`,
+    `INSERT INTO pagos (id_cita, monto, tipo_pago, metodo_pago, estatus)
+     VALUES (?, ?, 'COMPLETO', 'TARJETA', 'ENVIADO_BANCO')`,
     [id_cita, monto]
   );
 
-  // 2. Registrar transacción bancaria
+  // 2) Generar un id de transacción externa que usará el BANCO
+  const idTransaccionExterna = `SPA-${Date.now()}-${pago.insertId}`;
+
+  // 3) Registrar transacción bancaria, incluyendo id_transaccion_externa
   const [trx] = await db.query(
     `INSERT INTO transacciones_bancarias (
         id_pago,
@@ -31,9 +35,10 @@ const enviarAlBanco = async (payload) => {
         anio_expiracion,
         cvv,
         monto,
-        moneda
+        moneda,
+        id_transaccion_externa
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MXN')`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MXN', ?)`,
     [
       pago.insertId,
       numero_tarjeta_origen,
@@ -42,18 +47,27 @@ const enviarAlBanco = async (payload) => {
       mes_expiracion,
       anio_expiracion,
       cvv,
-      monto
+      monto,
+      idTransaccionExterna,
     ]
   );
 
-  // 3. (Por ahora) Simular envío al banco
-  const respuesta = await bancoService.enviarTransaccion(payload);
+  // 4) Simular el envío al BANCO (aquí luego puedes llamar al microservicio real)
+  const respuestaBanco = await bancoService.enviarTransaccion({
+    ...payload,
+    idTransaccion: idTransaccionExterna,
+  });
+
+  // (OPCIONAL) Si quisieras que el banco actualice en el mismo paso:
+  // await bancoService.procesarNotificacion(respuestaBanco);
 
   return {
     id_pago: pago.insertId,
     id_transaccion_banco: trx.insertId,
-    respuesta_banco: respuesta
+    id_transaccion_externa: idTransaccionExterna,
+    respuesta_banco: respuestaBanco,
   };
 };
 
 export default { enviarAlBanco };
+
