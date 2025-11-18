@@ -1,3 +1,8 @@
-
+// src/server.js
 import app from "./app.js";
-app.listen(3000, ()=>console.log("SPA External APIs running on port 3000"));
+
+const port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+  console.log(`SPA External APIs running on port ${port}`);
+});
