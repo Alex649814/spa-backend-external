@@ -1,0 +1,18 @@
+
+import express from "express";
+import catalogoRoutes from "./routes/catalogo.routes.js";
+import disponibilidadRoutes from "./routes/disponibilidad.routes.js";
+import ventasMallRoutes from "./routes/ventasMall.routes.js";
+import pagosRoutes from "./routes/pagos.routes.js";
+import bancoRoutes from "./routes/banco.routes.js";
+
+const app = express();
+app.use(express.json());
+
+app.use("/api", catalogoRoutes);
+app.use("/api", disponibilidadRoutes);
+app.use("/api", ventasMallRoutes);
+app.use("/api", pagosRoutes);
+app.use("/api", bancoRoutes);
+
+export default app;
