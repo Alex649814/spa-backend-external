@@ -2,7 +2,8 @@ import citasService from "../services/citas.service.js";
 
 export const registrarVentaMall = async (req, res) => {
   try {
-    const resultado = await citasService.registrarVenta(req.body);
+    const data = req.body;
+    const resultado = await citasService.registrarVenta(data);
     res.status(201).json(resultado);
   } catch (e) {
     console.error("Error en registrarVentaMall:", e);         // 👈 AGREGA ESTO

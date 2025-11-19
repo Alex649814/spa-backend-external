@@ -20,6 +20,14 @@ const procesarDisponibilidad = async (data) => {
     tipo_cabina // solo lo retornamos, no calculamos disponibilidad por cabina
   } = data;
 
+   if (!id_tienda || !id_servicio_externo || !fecha_cita || !hora_cita || !tipo_cabina) {
+    return {
+      disponible: false,
+      motivo: "Faltan campos obligatorios: id_tienda, id_servicio_externo, fecha_cita, hora_cita, tipo_cabina"
+    };
+  }
+
+
   if (!tipo_cabina) {
     return {
       disponible: false,
