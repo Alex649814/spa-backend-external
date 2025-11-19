@@ -1,3 +1,4 @@
+// src/services/disponibilidad.service.js
 import db from "../db/connection.js";
 import {
   buscarEmpleadoDisponible,
@@ -5,39 +6,40 @@ import {
 } from "./asignacion.service.js";
 
 /**
- * Procesa la disponibilidad de un servicio para una fecha/hora.
- * NO inserta cita en BD, solo:
- * - calcula inicio/fin
- * - verifica si hay empleados disponibles
- * - regresa info + el tipo de cabina solicitado (solo informativo)
+ * Procesa disponibilidad para un servicio
+ * NO inserta cita. Solo verifica si hay empleado disponible.
+ *
+ * Regresa:
+ *  - disponible: true/false
+ *  - motivo (si no está disponible)
+ *  - fecha_inicio / fecha_fin
+ *  - id_empleado_sugerido
+ *  - tipo_cabina_solicitada
  */
 const procesarDisponibilidad = async (data) => {
+  console.log("📥 [MALL] Datos recibidos en /disponibilidad");
+  console.log(data);
+
   const {
     id_tienda,
     id_servicio_externo,
     fecha_cita,
     hora_cita,
-    tipo_cabina // solo lo retornamos, no calculamos disponibilidad por cabina
+    tipo_cabina
   } = data;
 
-   if (!id_tienda || !id_servicio_externo || !fecha_cita || !hora_cita || !tipo_cabina) {
+  // Validación obligatoria
+  if (!id_tienda || !id_servicio_externo || !fecha_cita || !hora_cita || !tipo_cabina) {
     return {
       disponible: false,
       motivo: "Faltan campos obligatorios: id_tienda, id_servicio_externo, fecha_cita, hora_cita, tipo_cabina"
     };
   }
 
-
-  if (!tipo_cabina) {
-    return {
-      disponible: false,
-      motivo: "tipo_cabina es obligatorio para verificar disponibilidad"
-    };
-  }
-
   // 1. Buscar el servicio
   const [[serv]] = await db.query(
-    "SELECT * FROM servicios WHERE id_servicio_externo = ? AND id_tienda = ?",
+    `SELECT * FROM servicios
+     WHERE id_servicio_externo = ? AND id_tienda = ?`,
     [id_servicio_externo, id_tienda]
   );
 
@@ -49,9 +51,11 @@ const procesarDisponibilidad = async (data) => {
   }
 
   const dur = serv.duracion_minutos;
+
+  // 2. Calcular inicio y fin
   const { inicio, fin } = calcularRangoFechaHora(fecha_cita, hora_cita, dur);
 
-  // 2. Buscar empleado disponible
+  // 3. Buscar empleado disponible
   const idEmpleado = await buscarEmpleadoDisponible(
     id_tienda,
     fecha_cita,
@@ -66,8 +70,8 @@ const procesarDisponibilidad = async (data) => {
     };
   }
 
-  // 3. Responder info de disponibilidad (sin insertar cita)
-  return {
+  // 4. Respuesta final
+  const respuesta = {
     disponible: true,
     fecha_inicio: inicio,
     fecha_fin: fin,
@@ -75,6 +79,11 @@ const procesarDisponibilidad = async (data) => {
     id_empleado_sugerido: idEmpleado,
     tipo_cabina_solicitada: tipo_cabina
   };
+
+  console.log("✅ Disponibilidad encontrada:", respuesta);
+
+  return respuesta;
 };
 
 export default { procesarDisponibilidad };
+
