@@ -8,7 +8,7 @@ export const verificarDisponibilidad = async (req, res) => {
 
     const body = req.body;
 
-    // 🔧 Normalizamos nombres del Mall -> nombres internos
+    // 🔧 NORMALIZACIÓN: Mall -> nombres internos del SPA
     const payload = {
       id_tienda: body.id_tienda ?? body.store_id,
       id_servicio_externo: body.id_servicio_externo ?? body.service_external_id,
@@ -24,7 +24,7 @@ export const verificarDisponibilidad = async (req, res) => {
 
     console.log("📤 Respuesta interna de procesarDisponibilidad:", data);
 
-    // ❌ No hay disponibilidad → mandamos nulls + motivo
+    // ❌ No hay disponibilidad
     if (!data.disponible) {
       return res.json({
         servicio_id: null,
@@ -43,7 +43,7 @@ export const verificarDisponibilidad = async (req, res) => {
       fecha_inicio: data.fecha_inicio,
       fecha_fin: data.fecha_fin,
       duracion_minutos: data.duracion_minutos,
-      id_cita: null, // todavía no existe
+      id_cita: null, // aún no se crea
       id_barbero: data.id_empleado_sugerido
     };
 
