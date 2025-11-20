@@ -2,42 +2,45 @@
 import citasService from "../services/citas.service.js";
 
 /**
- * CONTROLADOR PARA REGISTRAR VENTA DESDE EL MALL
- * ---------------------------------------------------
- * - Recibe todos los datos del Mall
- * - Llama a citas.service.js (que hace TODA la lógica real)
- * - Responde en formato que el Mall entiende
+ * CONTROLADOR PARA REGISTRAR VENTA DESDE EL MALL (REG_VTA_SERV)
+ * ------------------------------------------------------------------
+ * - Recibe datos del Mall
+ * - Llama al servicio para registrar la cita
+ * - SOLO responde un OK técnico (no enviamos info de negocio todavía)
+ * - Logs claros, bonitos y fáciles de leer en producción
  */
 export const registrarVentaMall = async (req, res) => {
   try {
-    console.log("📥 [MALL] Datos recibidos en registrar-venta:");
-    console.log(req.body);
+    console.log("📥 [SPA] REG_VTA_SERV - Datos recibidos:");
+    console.log(JSON.stringify(req.body, null, 2));
 
-    const resultado = await citasService.registrarVenta(req.body);
+    await citasService.registrarVenta(req.body);
 
-    console.log("✅ Venta registrada correctamente:", resultado);
+    console.log("✅ [SPA] Cita guardada correctamente en la BD.");
 
-    res.status(201).json({
-      mensaje: "Venta registrada correctamente",
-      id_cita: resultado.id_cita,
-      codigo_reserva: resultado.codigo_reserva,
-      fecha_inicio: resultado.fecha_inicio,
-      fecha_fin: resultado.fecha_fin,
-      duracion_minutos: resultado.duracion_minutos,
-      id_empleado: resultado.id_empleado,
-      tipo_cabina_reservada: resultado.tipo_cabina_reservada,
+    return res.status(201).json({
+      message: "Cita registrada correctamente en SPA"
     });
 
   } catch (error) {
-    console.error("❌ Error en registrarVentaMall:", error.message);
+    console.error("❌ [SPA] Error en REG_VTA_SERV:");
+    console.error("   • Mensaje:", error.message);
+    console.error("   • Stack trace:", error.stack);
 
-    res.status(500).json({
+    const erroresCliente = [
+      "Faltan datos obligatorios",
+      "Servicio no encontrado",
+      "No hay empleados disponibles"
+    ];
+
+    const esErrorCliente = erroresCliente.some((t) =>
+      error.message.includes(t)
+    );
+
+    return res.status(esErrorCliente ? 400 : 500).json({
       error: "Error al registrar venta",
       detalle: error.message
     });
   }
 };
-
-
-
 
