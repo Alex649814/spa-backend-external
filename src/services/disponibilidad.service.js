@@ -5,17 +5,6 @@ import {
   calcularRangoFechaHora
 } from "./asignacion.service.js";
 
-/**
- * Procesa disponibilidad para un servicio
- * NO inserta cita. Solo verifica si hay empleado disponible.
- *
- * Regresa:
- *  - disponible: true/false
- *  - motivo (si no está disponible)
- *  - fecha_inicio / fecha_fin
- *  - id_empleado_sugerido
- *  - tipo_cabina_solicitada
- */
 const procesarDisponibilidad = async (data) => {
   console.log("📥 [MALL] Datos recibidos en /disponibilidad");
   console.log(data);
@@ -28,11 +17,12 @@ const procesarDisponibilidad = async (data) => {
     tipo_cabina
   } = data;
 
-  // Validación obligatoria
-  if (!id_tienda || !id_servicio_externo || !fecha_cita || !hora_cita || !tipo_cabina) {
+  // Validación obligatoria mínima según el mall
+  if (!id_tienda || !id_servicio_externo || !fecha_cita || !hora_cita) {
     return {
       disponible: false,
-      motivo: "Faltan campos obligatorios: id_tienda, id_servicio_externo, fecha_cita, hora_cita, tipo_cabina"
+      motivo:
+        "Faltan campos obligatorios: id_tienda, id_servicio_externo, fecha_cita, hora_cita"
     };
   }
 
@@ -70,18 +60,18 @@ const procesarDisponibilidad = async (data) => {
     };
   }
 
-  // 4. Respuesta final
+  // 4. Respuesta interna (rica en datos)
   const respuesta = {
     disponible: true,
+    id_servicio: serv.id_servicio,
     fecha_inicio: inicio,
     fecha_fin: fin,
     duracion_minutos: dur,
     id_empleado_sugerido: idEmpleado,
-    tipo_cabina_solicitada: tipo_cabina
+    tipo_cabina_solicitada: tipo_cabina || null
   };
 
   console.log("✅ Disponibilidad encontrada:", respuesta);
-
   return respuesta;
 };
 
