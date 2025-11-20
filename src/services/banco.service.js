@@ -12,22 +12,39 @@ function normalizarFechaUTC(isoString) {
 }
 
 /**
- * Procesa la notificación que envía el BANCO.
+ * 🔹 PROCESAR NOTIFICACIÓN DEL BANCO
+ *
+ * Esto es lo que el BANCO te va a mandar a:
+ *  POST /api/banco/notificacion
+ *
+ * Formato esperado (ejemplo):
+ * {
+ *   "NombreComercio": "Dream’s Kingdom SPA",
+ *   "CreadaUTC": "2025-11-15T21:10:00Z",
+ *   "IdTransaccion": "TRX-20251115-0005",
+ *   "TipoTransaccion": "TRANSFERENCIA",
+ *   "MontoTransaccion": 300.00,
+ *   "Moneda": "MXN",
+ *   "MarcaTarjeta": "VISA",
+ *   "NumeroTarjeta": "** ** ** 1111",
+ *   "NumeroAutorizacion": "AUTH-849302",
+ *   "NombreEstado": "ACEPTADA",
+ *   "Firma": "PIN",
+ *   "Mensaje": "Pago aprobado"
+ * }
  */
 const procesarNotificacion = async (data) => {
   const {
-    idTransaccion,        // TRX-...
-    TipoTransaccion,      // TRANSFERENCIA, etc.
-    CreadaUTC,            // "2025-11-15T21:10:00Z"
-    NombreComercio,       // "Dreams Kingdom SPA"
-
-    nombreEstado,         // ACEPTADA / RECHAZADA
-    Mensaje,              // "Pago aprobado"
-
-    MarcaTarjeta,         // VISA, MASTERCARD...
-    NumeroTarjeta,        // **** **** **** 0000
-    NumeroAutorizacion,   // AUTH-123456
-    Firma                 // PIN / FIRMA / etc.
+    IdTransaccion,     // 🔑 lo usamos para localizar id_transaccion_externa
+    TipoTransaccion,
+    CreadaUTC,
+    NombreComercio,
+    NombreEstado,
+    Mensaje,
+    MarcaTarjeta,
+    NumeroTarjeta,
+    NumeroAutorizacion,
+    Firma
   } = data;
 
   const creadaMysql = normalizarFechaUTC(CreadaUTC);
@@ -50,51 +67,82 @@ const procesarNotificacion = async (data) => {
       TipoTransaccion || null,
       creadaMysql,
       NombreComercio || null,
-      nombreEstado || null,
+      NombreEstado || null,
       Mensaje || null,
       MarcaTarjeta || null,
       NumeroTarjeta || null,
       NumeroAutorizacion || null,
       Firma || null,
-      idTransaccion,
+      IdTransaccion // 👈 aquí ligamos con lo que generamos en pagos.service
     ]
   );
 };
 
 /**
- * Simulación de envío al banco:
- * genera un objeto con el mismo formato que usaría procesarNotificacion.
+ * 🔹 SIMULACIÓN DE ENVÍO AL BANCO
+ *
+ * Esto es lo que TÚ le mandas al banco desde pagos.service:
+ *
+ * {
+ *   "NombreComercio": "Dream’s Kingdom SPA",
+ *   "NumeroTarjetaOrigen": "1234 5678 9000 0000",
+ *   "NumeroTarjetaDestino": "0000 0009 8765 4321",
+ *   "NombreCliente": "Nombre Cliente",
+ *   "MesExp": 12,
+ *   "AnioExp": 2027,
+ *   "Cvv": "123",
+ *   "Monto": 750.00,
+ *   "Moneda": "MXN",
+ *   "idTransaccion": "SPA-1732044000000-5"
+ * }
+ *
+ * Y regresamos algo con el MISMO formato que el banco te dijo.
  */
-const enviarTransaccion = async (data) => {
+const enviarTransaccion = async (solicitud) => {
+  const {
+    NombreComercio,
+    NumeroTarjetaOrigen,
+    NumeroTarjetaDestino,
+    NombreCliente,
+    MesExp,
+    AnioExp,
+    Cvv,
+    Monto,
+    Moneda,
+    idTransaccion
+  } = solicitud;
+
   const ahora = new Date().toISOString();
 
   const last4 =
-    data.numero_tarjeta_origen?.slice(-4) ||
-    data.numero_tarjeta_destino?.slice(-4) ||
+    NumeroTarjetaOrigen?.slice(-4) ||
+    NumeroTarjetaDestino?.slice(-4) ||
     "0000";
 
-  const idTransaccion =
-    data.idTransaccion || `TRX-${Date.now()}`; // por si viene desde pagos.service
+  // Si no viene NombreComercio, usamos el del SPA
+  const nombreComercioFinal = NombreComercio || "Dream’s Kingdom SPA";
 
   return {
-    idTransaccion,
-    TipoTransaccion: "TRANSFERENCIA",
+    NombreComercio: nombreComercioFinal,
     CreadaUTC: ahora,
-    NombreComercio: "Servicios SPA Mall",
-    nombreEstado: "ACEPTADA",
-    Mensaje: "Pago aprobado",
+    IdTransaccion: idTransaccion || `TRX-${Date.now()}`,
+    TipoTransaccion: "TRANSFERENCIA",
+
+    MontoTransaccion: Monto,
+    Moneda: Moneda || "MXN",
+
     MarcaTarjeta: "VISA",
-    NumeroTarjeta: "**** **** **** " + last4,
+    NumeroTarjeta: "** ** ** " + last4,
     NumeroAutorizacion:
       "AUTH-" +
       Math.floor(Math.random() * 1000000)
         .toString()
         .padStart(6, "0"),
+    NombreEstado: "ACEPTADA",
     Firma: "PIN",
+
+    Mensaje: "Pago aprobado"
   };
 };
 
 export default { procesarNotificacion, enviarTransaccion };
-
-
-
