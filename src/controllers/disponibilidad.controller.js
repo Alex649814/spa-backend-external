@@ -30,7 +30,6 @@ export const verificarDisponibilidad = async (req, res) => {
         duracion_minutos: null,
         id_cita: null,
         id_barbero: null,
-        motivo: data.motivo // campo extra informativo
       });
     }
 
