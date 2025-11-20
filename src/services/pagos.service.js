@@ -74,21 +74,25 @@ const enviarAlBanco = async (payload) => {
   );
 
   // 4) Simular el envío al BANCO.
-  //    Aquí NO pegamos todavía al banco real, solo usamos bancoService.
+  //    Aquí todavía no pegamos al banco real, usamos bancoService.enviarTransaccion
   const respuestaBanco = await bancoService.enviarTransaccion({
-    idTransaccion: idTransaccionExterna,
-    monto,
-    moneda: "MXN",
-    numero_tarjeta_origen,
-    numero_tarjeta_destino,
-    nombre_cliente_tarjeta,
-    mes_expiracion,
-    anio_expiracion,
-    cvv
-  });
+    // 👇 Lo que el banco espera en su "solicitud de banco"
+    NombreComercio: "Dream’s Kingdom SPA",
 
-  // (Opcional) Podríamos, en el futuro, actualizar la transacción
-  // usando bancoService.procesarNotificacion(respuestaBanco).
+    NumeroTarjetaOrigen: numero_tarjeta_origen,
+    NumeroTarjetaDestino: numero_tarjeta_destino,
+
+    NombreCliente: nombre_cliente_tarjeta,
+    MesExp: mes_expiracion,
+    AnioExp: anio_expiracion,
+    Cvv: cvv,
+
+    Monto: monto,
+    Moneda: "MXN",
+
+    // Además seguimos pasando el idTransaccion para ligarlo
+    idTransaccion: idTransaccionExterna
+  });
 
   return {
     id_pago: pago.insertId,
