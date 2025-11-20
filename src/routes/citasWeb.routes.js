@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { crearCitaWeb } from "../controllers/citasWeb.controller.js";
+import express from "express";
+import { registrarCitaWeb } from "../controllers/citasWeb.controller.js";
 
-const router = Router();
+const router = express.Router();
 
-router.post("/citas/web", crearCitaWeb);
+router.post("/web", registrarCitaWeb);
 
 export default router;
