@@ -8,20 +8,23 @@ export const verificarDisponibilidad = async (req, res) => {
 
     const body = req.body;
 
-    // Soportamos tanto los nombres del mall como los nuestros
+    // 🔧 Normalizamos nombres del Mall -> nombres internos
     const payload = {
       id_tienda: body.id_tienda ?? body.store_id,
-      id_servicio_externo:
-        body.id_servicio_externo ?? body.service_external_id,
+      id_servicio_externo: body.id_servicio_externo ?? body.service_external_id,
       fecha_cita: body.fecha_cita ?? body.appointment_date,
       hora_cita: body.hora_cita ?? body.appointment_time,
-      // tipo_cabina es opcional (por si tú lo sigues usando desde tu front)
       tipo_cabina: body.tipo_cabina ?? null
     };
 
+    console.log("🔧 Payload normalizado para servicio:");
+    console.log(payload);
+
     const data = await disponibilidadService.procesarDisponibilidad(payload);
 
-    // Si NO hay disponibilidad, devolvemos todo en null + motivo (extra)
+    console.log("📤 Respuesta interna de procesarDisponibilidad:", data);
+
+    // ❌ No hay disponibilidad → mandamos nulls + motivo
     if (!data.disponible) {
       return res.json({
         servicio_id: null,
@@ -30,25 +33,26 @@ export const verificarDisponibilidad = async (req, res) => {
         duracion_minutos: null,
         id_cita: null,
         id_barbero: null,
+        motivo: data.motivo
       });
     }
 
-    // Si SÍ hay disponibilidad → formateamos como DISP_FECHA
+    // ✅ Sí hay disponibilidad
     const respuestaMall = {
       servicio_id: data.id_servicio,
       fecha_inicio: data.fecha_inicio,
       fecha_fin: data.fecha_fin,
       duracion_minutos: data.duracion_minutos,
-      id_cita: null, // todavía no se crea, eso pasa en la venta
+      id_cita: null, // todavía no existe
       id_barbero: data.id_empleado_sugerido
     };
 
     console.log("📤 [MALL] DISP_FECHA enviado:");
     console.log(respuestaMall);
 
-    res.json(respuestaMall);
+    return res.json(respuestaMall);
   } catch (e) {
-    console.error("Error en verificarDisponibilidad:", e);
-    res.status(500).json({ error: "Error al verificar disponibilidad" });
+    console.error("❌ Error en verificarDisponibilidad:", e);
+    return res.status(500).json({ error: "Error al verificar disponibilidad" });
   }
 };
