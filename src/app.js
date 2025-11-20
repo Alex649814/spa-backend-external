@@ -8,7 +8,6 @@ import ventasMallRoutes from "./routes/ventasMall.routes.js";
 import pagosRoutes from "./routes/pagos.routes.js";
 import bancoRoutes from "./routes/banco.routes.js";
 import citasWebRoutes from "./routes/citasWeb.routes.js";
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -18,6 +17,6 @@ app.use("/api", disponibilidadRoutes);
 app.use("/api", ventasMallRoutes);
 app.use("/api", pagosRoutes);
 app.use("/api", bancoRoutes);
-app.use("/api", citasWebRoutes);
+app.use("/api/citas", citasWebRoutes);
 
 export default app;
