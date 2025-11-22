@@ -7,12 +7,16 @@ import bancoService from "./banco.service.js";
  *
  * 1) Registra el pago en la tabla `pagos`
  * 2) Crea el registro en `transacciones_bancarias`
- * 3) Llama al servicio del banco (simulado) para obtener la respuesta
- * 4) Regresa al Mall:
+ * 3) Llama a la API del banco (BANCARATA)
+ * 4) Actualiza `transacciones_bancarias` con la respuesta real del banco
+ * 5) Actualiza estatus de `pagos` y `citas`
+ * 6) Regresa:
  *    - id_pago
  *    - id_transaccion_banco
- *    - id_transaccion_externa
- *    - respuesta_banco (JSON con los campos que el banco maneja)
+ *    - id_transaccion_externa (id del banco)
+ *    - respuesta_banco
+ *    - estatus_pago
+ *    - estatus_cita
  */
 const enviarAlBanco = async (payload) => {
   const {
@@ -32,7 +36,9 @@ const enviarAlBanco = async (payload) => {
   }
 
   if (!numero_tarjeta_origen || !numero_tarjeta_destino) {
-    throw new Error("Los números de tarjeta origen y destino son obligatorios");
+    throw new Error(
+      "Los números de tarjeta origen y destino son obligatorios"
+    );
   }
 
   // 1) Registrar el pago ligado a la cita
@@ -42,10 +48,7 @@ const enviarAlBanco = async (payload) => {
     [id_cita, monto]
   );
 
-  // 2) Generar un id de transacción externa que usará el BANCO
-  const idTransaccionExterna = `SPA-${Date.now()}-${pago.insertId}`;
-
-  // 3) Registrar transacción bancaria, incluyendo id_transaccion_externa
+  // 2) Registrar transacción bancaria (lo que ENVIAMOS al banco)
   const [trx] = await db.query(
     `INSERT INTO transacciones_bancarias (
         id_pago,
@@ -56,10 +59,9 @@ const enviarAlBanco = async (payload) => {
         anio_expiracion,
         cvv,
         monto,
-        moneda,
-        id_transaccion_externa
+        moneda
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MXN', ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MXN')`,
     [
       pago.insertId,
       numero_tarjeta_origen,
@@ -68,37 +70,87 @@ const enviarAlBanco = async (payload) => {
       mes_expiracion,
       anio_expiracion,
       cvv,
-      monto,
-      idTransaccionExterna
+      monto
     ]
   );
 
-  // 4) Simular el envío al BANCO.
-  //    Aquí todavía no pegamos al banco real, usamos bancoService.enviarTransaccion
+  // 3) Llamar al BANCO real (BANCARATA)
   const respuestaBanco = await bancoService.enviarTransaccion({
-    // 👇 Lo que el banco espera en su "solicitud de banco"
-    NombreComercio: "Dream’s Kingdom SPA",
-
     NumeroTarjetaOrigen: numero_tarjeta_origen,
     NumeroTarjetaDestino: numero_tarjeta_destino,
-
     NombreCliente: nombre_cliente_tarjeta,
     MesExp: mes_expiracion,
     AnioExp: anio_expiracion,
     Cvv: cvv,
-
-    Monto: monto,
-    Moneda: "MXN",
-
-    // Además seguimos pasando el idTransaccion para ligarlo
-    idTransaccion: idTransaccionExterna
+    Monto: monto
   });
 
+  // 4) Actualizar la transacción bancaria con los datos del banco
+  const creadaMysql = respuestaBanco.CreadaUTC
+    ? respuestaBanco.CreadaUTC.replace("T", " ").replace("Z", "").slice(0, 19)
+    : null;
+
+  const idTransaccionBanco =
+    respuestaBanco.IdTransaccion || respuestaBanco.id_transaccion || null;
+
+  await db.query(
+    `UPDATE transacciones_bancarias
+     SET
+       tipo_transaccion         = ?,
+       creada_utc               = ?,
+       nombre_comercio          = ?,
+       id_transaccion_externa   = ?,
+       marca_tarjeta            = ?,
+       numero_tarjeta_mascarada = ?,
+       numero_autorizacion      = ?,
+       nombre_estado            = ?,
+       firma                    = ?,
+       mensaje                  = ?,
+       fecha_actualizacion      = NOW()
+     WHERE id_transaccion_banco = ?`,
+    [
+      respuestaBanco.TipoTransaccion || null,
+      creadaMysql,
+      respuestaBanco.NombreComercio || "Dream’s Kingdom SPA",
+      idTransaccionBanco,
+      respuestaBanco.MarcaTarjeta || null,
+      respuestaBanco.NumeroTarjeta || null,
+      respuestaBanco.NumeroAutorizacion || null,
+      respuestaBanco.NombreEstado || null,
+      respuestaBanco.Firma || null,
+      respuestaBanco.Mensaje || null,
+      trx.insertId
+    ]
+  );
+
+  // 5) Actualizar estatus del pago y de la cita según respuesta del banco
+  const estadoBanco = (respuestaBanco.NombreEstado || "").toUpperCase();
+  const aprobada = estadoBanco === "ACEPTADA";
+
+  const nuevoEstatusPago = aprobada ? "APROBADO" : "RECHAZADO";
+  await db.query(
+    `UPDATE pagos
+     SET estatus = ?, actualizado_en = NOW()
+     WHERE id_pago = ?`,
+    [nuevoEstatusPago, pago.insertId]
+  );
+
+  const nuevoEstatusCita = aprobada ? "CONFIRMADA" : "CANCELADA";
+  await db.query(
+    `UPDATE citas
+     SET estatus = ?, actualizado_en = NOW()
+     WHERE id_cita = ?`,
+    [nuevoEstatusCita, id_cita]
+  );
+
+  // 6) Regresar info al frontend
   return {
     id_pago: pago.insertId,
     id_transaccion_banco: trx.insertId,
-    id_transaccion_externa: idTransaccionExterna,
-    respuesta_banco: respuestaBanco
+    id_transaccion_externa: idTransaccionBanco,
+    respuesta_banco: respuestaBanco,
+    estatus_pago: nuevoEstatusPago,
+    estatus_cita: nuevoEstatusCita
   };
 };
 
