@@ -4,8 +4,19 @@ import disponibilidadRoutes from "./routes/disponibilidad.routes.js";
 import ventasMallRoutes from "./routes/ventasMall.routes.js"; 
 import pagosRoutes from "./routes/pagos.routes.js"; 
 import bancoRoutes from "./routes/banco.routes.js"; 
+import cors from "cors";
 const app = express(); 
 app.use(express.json()); 
+// Permitir llamadas desde el frontend
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",                        
+      "http://spa-servicios.rtakabinetsolutions.com",  
+      "http://api-servicios-spa.rtakabinetsolutions.com" 
+    ]
+  })
+);
 app.use("/api", catalogoRoutes); 
 app.use("/api", disponibilidadRoutes); 
 app.use("/api", ventasMallRoutes); 
