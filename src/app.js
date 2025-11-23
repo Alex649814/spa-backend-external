@@ -4,7 +4,8 @@ import disponibilidadRoutes from "./routes/disponibilidad.routes.js";
 import ventasMallRoutes from "./routes/ventasMall.routes.js"; 
 import pagosRoutes from "./routes/pagos.routes.js"; 
 import bancoRoutes from "./routes/banco.routes.js"; 
-import categoriasRoutes from "./src/routes/categorias.routes.js";
+import categoriasRoutes from "./routes/categorias.routes.js";
+
 import cors from "cors";
 const app = express(); 
 app.use(express.json()); 
