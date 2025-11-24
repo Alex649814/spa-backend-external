@@ -19,8 +19,30 @@ async function listarCategorias(idTienda = 2) {
   return rows; // tal cual para el frontend
 }
 
-// Lista los servicios de una categoría
+// 🔹 AHORA: categoría + servicios
 async function listarServiciosPorCategoria(idCategoria, idTienda = 2) {
+  // 1) Traer la categoría
+  const [catRows] = await db.query(
+    `SELECT 
+        id_categoria,
+        nombre,
+        descripcion,
+        imagen_url
+     FROM categorias_servicio
+     WHERE id_tienda = ?
+       AND id_categoria = ?
+       AND estatus = 'ACTIVA'`,
+    [idTienda, idCategoria]
+  );
+
+  // Si no existe la categoría, regresamos null
+  if (catRows.length === 0) {
+    return null;
+  }
+
+  const categoria = catRows[0];
+
+  // 2) Traer los servicios de esa categoría (tu query original)
   const [rows] = await db.query(
     `SELECT
         s.id_servicio AS id,
@@ -37,8 +59,8 @@ async function listarServiciosPorCategoria(idCategoria, idTienda = 2) {
     [idTienda, idCategoria]
   );
 
-  // Los adaptamos al formato que ya usas en el frontend
-  return rows.map((s) => ({
+  // 3) Adaptar servicios al formato que ya usas
+  const servicios = rows.map((s) => ({
     id: s.id,
     store_id: idTienda,
     service_external_id: s.id_servicio_externo,
@@ -46,11 +68,16 @@ async function listarServiciosPorCategoria(idCategoria, idTienda = 2) {
     description: s.descripcion,
     precio: Number(s.precio_base),
     duracion_minutos: s.duracion_minutos,
-    // Campos que el Mall usa pero aquí no aplican
     talla: null,
     color: null,
     stock: null
   }));
+
+  // 4) Devolver OBJETO con categoría + servicios
+  return {
+    categoria,
+    servicios
+  };
 }
 
 export default {

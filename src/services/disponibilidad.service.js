@@ -6,7 +6,7 @@ import {
 } from "./asignacion.service.js";
 
 const procesarDisponibilidad = async (data) => {
-  console.log("📥 [MALL] Datos recibidos en /disponibilidad");
+  console.log("📥 [SERVICE] procesarDisponibilidad - payload:");
   console.log(data);
 
   const {
@@ -17,8 +17,9 @@ const procesarDisponibilidad = async (data) => {
     tipo_cabina
   } = data;
 
-  // Validación obligatoria mínima según el mall
+  // 1) Validación básica
   if (!id_tienda || !id_servicio_externo || !fecha_cita || !hora_cita) {
+    console.log("⚠️ Falta info obligatoria");
     return {
       disponible: false,
       motivo:
@@ -26,7 +27,7 @@ const procesarDisponibilidad = async (data) => {
     };
   }
 
-  // 1. Buscar el servicio
+  // 2) Buscar servicio
   const [[serv]] = await db.query(
     `SELECT * FROM servicios
      WHERE id_servicio_externo = ? AND id_tienda = ?`,
@@ -34,6 +35,7 @@ const procesarDisponibilidad = async (data) => {
   );
 
   if (!serv) {
+    console.log("⚠️ Servicio no encontrado para esa tienda");
     return {
       disponible: false,
       motivo: "Servicio no encontrado para esa tienda"
@@ -42,10 +44,10 @@ const procesarDisponibilidad = async (data) => {
 
   const dur = serv.duracion_minutos;
 
-  // 2. Calcular inicio y fin
+  // 3) Calcular inicio y fin
   const { inicio, fin } = calcularRangoFechaHora(fecha_cita, hora_cita, dur);
 
-  // 3. Buscar empleado disponible
+  // 4) Buscar empleado disponible
   const idEmpleado = await buscarEmpleadoDisponible(
     id_tienda,
     fecha_cita,
@@ -54,13 +56,13 @@ const procesarDisponibilidad = async (data) => {
   );
 
   if (!idEmpleado) {
+    console.log("⚠️ No hay empleados disponibles");
     return {
       disponible: false,
       motivo: "No hay empleados disponibles para ese horario"
     };
   }
 
-  // 4. Respuesta interna (rica en datos)
   const respuesta = {
     disponible: true,
     id_servicio: serv.id_servicio,
@@ -76,4 +78,3 @@ const procesarDisponibilidad = async (data) => {
 };
 
 export default { procesarDisponibilidad };
-

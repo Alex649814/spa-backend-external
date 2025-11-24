@@ -1,7 +1,7 @@
 // src/controllers/categorias.controller.js
 import categoriasService from "../services/categorias.service.js";
 
-// GET /api/categorias
+// GET /api/categorias  (déjalo igual)
 export const obtenerCategorias = async (req, res) => {
   try {
     const idTienda = req.query.id_tienda
@@ -30,13 +30,18 @@ export const obtenerServiciosDeCategoria = async (req, res) => {
       ? Number(req.query.id_tienda)
       : 2;
 
-    const servicios =
+    const resultado =
       await categoriasService.listarServiciosPorCategoria(
         idCategoria,
         idTienda
       );
 
-    res.json(servicios);
+    if (!resultado) {
+      return res.status(404).json({ error: "Categoría no encontrada" });
+    }
+
+    // 🔹 Resultado = { categoria, servicios }
+    res.json(resultado);
   } catch (e) {
     console.error("Error en obtenerServiciosDeCategoria:", e);
     res
