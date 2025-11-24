@@ -1,75 +1,70 @@
 // src/pages/CategoriesPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCategorias } from "../api/spaApi";
+import { getCategorias } from "../api/spaApi.js";
 
-export default function CategoriesPage() {
+function CategoriesPage() {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function load() {
+    async function cargar() {
       try {
+        setLoading(true);
         const data = await getCategorias();
-        setCategorias(data || []);
+        setCategorias(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error cargando categorías:", err);
         setError("Error al cargar las categorías.");
       } finally {
         setLoading(false);
       }
     }
-    load();
+
+    cargar();
   }, []);
 
   const handleClickCategoria = (cat) => {
-    navigate(`/categoria/${cat.id_categoria}`);
+    navigate(`/categoria/${cat.id_categoria}`, {
+      state: { categoria: cat } // pasamos nombre + descripcion + imagen_url
+    });
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#050816",
-        color: "white",
-        padding: "2rem 4rem"
-      }}
-    >
-      <header style={{ marginBottom: "2rem" }}>
-        <h1 className="page-title">Servicios</h1>
-        <p className="page-subtitle">
-          Elige una categoría para ver los tratamientos disponibles.
-        </p>
-      </header>
+    <main className="spa-page">
+      {/* Ya no quieres título arriba, así que lo dejamos vacío o muy discreto */}
+      {/* <h1 className="page-title">SERVICIOS</h1> */}
 
       {loading && <p>Cargando categorías...</p>}
-      {error && <p style={{ color: "salmon" }}>{error}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
       {!loading && !error && (
-        <div className="categories-grid">
-          {categorias.map((cat) => {
-            const imgSrc = cat.imagen_url || "/categorias/default.jpg";
-
-            return (
-              <button
-                key={cat.id_categoria}
-                className="category-card"
-                onClick={() => handleClickCategoria(cat)}
-              >
-                <div className="category-card__image-wrapper">
-                  <img src={imgSrc} alt={cat.nombre} />
-                  <div className="category-card__overlay" />
-                  <span className="category-card__name">
-                    {cat.nombre.toUpperCase()}
-                  </span>
+        <section className="categories-grid">
+          {categorias.map((cat) => (
+            <button
+              key={cat.id_categoria}
+              className="category-card"
+              onClick={() => handleClickCategoria(cat)}
+            >
+              <div className="category-card__image-wrapper">
+                <img
+                  src={cat.imagen_url}
+                  alt={cat.nombre}
+                  className="category-card__image"
+                />
+                <div className="category-card__overlay" />
+                <div className="category-card__name">
+                  {cat.nombre.toUpperCase()}
                 </div>
-              </button>
-            );
-          })}
-        </div>
+              </div>
+            </button>
+          ))}
+        </section>
       )}
-    </div>
+    </main>
   );
 }
+
+export default CategoriesPage;

@@ -1,23 +1,25 @@
 // src/pages/CategoryServicesPage.jsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { getServiciosPorCategoria, getCategorias } from "../api/spaApi.js";
+import {
+  getServiciosPorCategoria,
+  getCategorias
+} from "../api/spaApi.js";
 import { useBooking } from "../context/BookingContext.jsx";
 
 function CategoryServicesPage() {
-  const { idCategoria } = useParams();
+  const { idCategoria } = useParams();      // 👈 importante que coincida con la ruta
   const navigate = useNavigate();
   const location = useLocation();
   const { setSelectedService } = useBooking();
 
-  const [categoria, setCategoria] = useState(
-    location.state?.categoria || null
-  );
+  // Si venimos desde CategoriesPage, ya traemos la categoría en state
+  const [categoria, setCategoria] = useState(location.state?.categoria || null);
   const [servicios, setServicios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Cargar servicios de la categoría
+  // Cargar servicios
   useEffect(() => {
     async function cargar() {
       try {
@@ -25,20 +27,22 @@ function CategoryServicesPage() {
         const data = await getServiciosPorCategoria(idCategoria);
         setServicios(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error cargando servicios:", err);
         setError("Error al cargar los servicios.");
       } finally {
         setLoading(false);
       }
     }
 
-    cargar();
+    if (idCategoria) {
+      cargar();
+    }
   }, [idCategoria]);
 
-  // Si no recibimos info de la categoría por state, la traemos de /categorias
+  // Si no traemos la categoría por state, la buscamos en /categorias
   useEffect(() => {
     async function cargarCategoria() {
-      if (!categoria) {
+      if (!categoria && idCategoria) {
         try {
           const cats = await getCategorias();
           const found = cats.find(
@@ -53,20 +57,41 @@ function CategoryServicesPage() {
     cargarCategoria();
   }, [categoria, idCategoria]);
 
-  const handleReservar = (servicio) => {
+  const handleMasTratamientos = () => {
+    navigate("/"); // te regresa a la página de categorías
+  };
+
+  const handleAgregarAlCarrito = (servicio) => {
+    // Aquí podrías agregar al carrito real;
+    // por ahora lo dejamos como "seleccionar servicio" + ir a reserva
     setSelectedService(servicio);
     navigate("/reserva");
   };
 
   const titulo = categoria?.nombre || "Servicios";
-  const descripcion = categoria?.descripcion || "";
+  const descripcionCategoria = categoria?.descripcion || "";
 
   return (
-    <div>
-      <h1 style={{ marginBottom: "0.5rem" }}>{titulo}</h1>
-      {descripcion && (
-        <p style={{ marginBottom: "1.5rem" }}>{descripcion}</p>
-      )}
+    <main className="spa-page spa-page--category">
+      {/* Encabezado de la categoría */}
+      <section className="category-detail-header">
+        <div className="category-detail-header__title-row">
+          <h1 className="category-detail-title">{titulo.toUpperCase()}</h1>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleMasTratamientos}
+          >
+            Más tratamientos
+          </button>
+        </div>
+
+        {descripcionCategoria && (
+          <div className="category-detail-description">
+            {descripcionCategoria}
+          </div>
+        )}
+      </section>
 
       {loading && <p>Cargando servicios...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -76,85 +101,58 @@ function CategoryServicesPage() {
       )}
 
       {!loading && !error && servicios.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <section className="category-services-list">
           {servicios.map((servicio) => (
-            <div
-              key={servicio.id}
-              style={{
-                borderRadius: "16px",
-                padding: "1.25rem 1.5rem",
-                background: "#020617",
-                border: "1px solid #1f2937",
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "1rem",
-                flexWrap: "wrap"
-              }}
-            >
-              <div style={{ flex: 1, minWidth: "220px" }}>
-                <h2
-                  style={{
-                    fontSize: "1.1rem",
-                    fontWeight: "600",
-                    marginBottom: "0.25rem"
-                  }}
-                >
-                  {servicio.nombre}{" "}
+            <article key={servicio.id} className="service-row">
+              <div className="service-row__main">
+                <div className="service-row__label">Servicio</div>
+                <div className="service-row__name">
+                  {servicio.nombre}
                   {servicio.duracion_minutos && (
-                    <span style={{ fontWeight: "normal", fontSize: "0.95rem" }}>
-                      {servicio.duracion_minutos} min
+                    <span className="service-row__duration">
+                      {" "}
+                      — {servicio.duracion_minutos} Min.
                     </span>
                   )}
-                </h2>
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    color: "#d1d5db",
-                    marginBottom: "0.5rem"
-                  }}
-                >
-                  {servicio.description}
-                </p>
+                </div>
+                {servicio.description && (
+                  <div className="service-row__description">
+                    {servicio.description}
+                  </div>
+                )}
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  minWidth: "180px"
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "1rem",
-                    fontWeight: "600",
-                    marginBottom: "0.5rem"
-                  }}
-                >
-                  MX$ {Number(servicio.precio).toFixed(2)}
-                </p>
+              <div className="service-row__meta">
+                <div>
+                  <div className="service-row__label">Duración</div>
+                  <div>{servicio.duracion_minutos || "--"} Min.</div>
+                </div>
+                <div>
+                  <div className="service-row__label">Precio</div>
+                  <div>MX$ {Number(servicio.precio).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="service-row__label">Cantidad</div>
+                  {/* Aquí luego metemos los botones +/-.
+                      Por ahora solo un placeholder "1". */}
+                  <div>1</div>
+                </div>
+              </div>
+
+              <div className="service-row__actions">
                 <button
-                  onClick={() => handleReservar(servicio)}
-                  style={{
-                    padding: "0.5rem 1.2rem",
-                    borderRadius: "999px",
-                    border: "none",
-                    backgroundColor: "#a47b5b",
-                    color: "white",
-                    fontWeight: "bold",
-                    cursor: "pointer"
-                  }}
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => handleAgregarAlCarrito(servicio)}
                 >
-                  Reservar
+                  Agregar al carrito
                 </button>
               </div>
-            </div>
+            </article>
           ))}
-        </div>
+        </section>
       )}
-    </div>
+    </main>
   );
 }
 
