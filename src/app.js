@@ -11,18 +11,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 const app = express(); 
-app.use(cors());
 app.use(express.json()); 
 // Permitir llamadas desde el frontend
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",                        
-      "http://spa-servicios.rtakabinetsolutions.com",  
-      "http://api-servicios-spa.rtakabinetsolutions.com" 
-    ]
-  })
-);
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://spa-servicios.rtakabinetsolutions.com",
+    "http://api-servicios-spa.rtakabinetsolutions.com"
+  ],
+  methods: "GET,POST,PUT,DELETE",
+  credentials: true
+}));
 app.use("/api", catalogoRoutes); 
 app.use("/api", disponibilidadRoutes); 
 app.use("/api", ventasMallRoutes); 
