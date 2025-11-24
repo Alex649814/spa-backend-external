@@ -1,12 +1,12 @@
 // src/controllers/categorias.controller.js
 import categoriasService from "../services/categorias.service.js";
 
-// GET /api/categorias  (déjalo igual)
+// GET /api/categorias
 export const obtenerCategorias = async (req, res) => {
   try {
     const idTienda = req.query.id_tienda
       ? Number(req.query.id_tienda)
-      : 2; // tu SPA
+      : 2; // por default tu SPA
 
     const lista = await categoriasService.listarCategorias(idTienda);
     res.json(lista);
@@ -30,18 +30,13 @@ export const obtenerServiciosDeCategoria = async (req, res) => {
       ? Number(req.query.id_tienda)
       : 2;
 
-    const resultado =
+    const servicios =
       await categoriasService.listarServiciosPorCategoria(
         idCategoria,
         idTienda
       );
 
-    if (!resultado) {
-      return res.status(404).json({ error: "Categoría no encontrada" });
-    }
-
-    // 🔹 Resultado = { categoria, servicios }
-    res.json(resultado);
+    res.json(servicios);
   } catch (e) {
     console.error("Error en obtenerServiciosDeCategoria:", e);
     res
