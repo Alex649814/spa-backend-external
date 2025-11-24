@@ -235,7 +235,6 @@ const crearCitaWeb = async (data) => {
 
 export default {
   registrarVenta,
-  registrarVentaMall,
   crearCitaWeb   // 👈 AGREGA ESTA LÍNEA
 };
 
