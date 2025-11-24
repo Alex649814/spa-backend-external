@@ -6,7 +6,7 @@ export const obtenerCategorias = async (req, res) => {
   try {
     const idTienda = req.query.id_tienda
       ? Number(req.query.id_tienda)
-      : 2; // por default tu SPA
+      : 2; // id de tu SPA
 
     const lista = await categoriasService.listarCategorias(idTienda);
     res.json(lista);

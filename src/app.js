@@ -8,6 +8,7 @@ import categoriasRoutes from "./routes/categorias.routes.js";
 
 import cors from "cors";
 const app = express(); 
+app.use(cors()); 
 app.use(express.json()); 
 // Permitir llamadas desde el frontend
 app.use(
