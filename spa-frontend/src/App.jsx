@@ -36,6 +36,7 @@ function AppWithRouter() {
         <Route path="/carrito" element={<CartPage />} />
         <Route path="/reserva" element={<BookingPage />} />
         <Route path="/pago" element={<PaymentPage />} />
+        <Route path="/comprobante" element={<PaymentReceiptPage />} />
       </Routes>
     </Layout>
   );

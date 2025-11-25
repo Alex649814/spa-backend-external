@@ -115,22 +115,25 @@ function PaymentPage() {
       const resp = await solicitarPago(payload);
       console.log("💳 Respuesta del backend/banco:", resp);
 
+      // La respuesta real del banco viene anidada en resp.respuesta_banco
+      const banco = resp?.respuesta_banco || resp;
+
       // Checamos si el pago fue aprobado con varios posibles campos
       const isApproved =
-        resp?.NombreEstado === "ACEPTADA" ||
-        resp?.NombreEstado === "APROBADA" ||
-        resp?.Mensaje === "Pago aprobado" ||
-        resp?.aprobado === true ||
-        resp?.estatus === "APROBADA" ||
-        resp?.status === "APPROVED" ||
-        !!resp?.codigoAutorizacion ||
-        !!resp?.AuthorizationCode;
+        (banco?.NombreEstado || "").toUpperCase() === "ACEPTADA" ||
+        (banco?.NombreEstado || "").toUpperCase() === "APROBADA" ||
+        banco?.Mensaje === "Pago aprobado" ||
+        banco?.aprobado === true ||
+        banco?.estatus === "APROBADA" ||
+        banco?.status === "APPROVED" ||
+        !!banco?.codigoAutorizacion ||
+        !!banco?.AuthorizationCode;
 
       if (!isApproved) {
         const msg =
-          resp?.Mensaje ||
-          resp?.mensaje ||
-          resp?.motivo ||
+          banco?.Mensaje ||
+          banco?.mensaje ||
+          banco?.motivo ||
           "El banco rechazó la transacción. Verifica los datos.";
         setErrorMsg(msg);
         return;
@@ -139,6 +142,7 @@ function PaymentPage() {
       // Guardamos todo lo necesario para el comprobante
       setPagoInfo({
         ...resp,
+        respuesta_banco: banco,
         email,
         telefono: phone,
         citaInfo,
@@ -149,10 +153,11 @@ function PaymentPage() {
       setSuccessMsg("Pago aprobado correctamente. ¡Gracias!");
       setErrorMsg("");
 
+      // Limpiamos carrito y vamos a la pantalla de comprobante
       setTimeout(() => {
         clearCart();
-        navigate("/");
-      }, 2500);
+        navigate("/comprobante"); // 👈 aquí cambiamos a la nueva ruta
+      }, 1500);
     } catch (err) {
       console.error("Error al procesar el pago:", err);
       setErrorMsg(
