@@ -10,7 +10,7 @@ function CategoryServicesPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // del contexto: función para agregar al carrito
+  // Del contexto: función para agregar al carrito
   const { addToCart } = useBooking();
 
   const [categoria, setCategoria] = useState(location.state?.categoria || null);
@@ -20,7 +20,7 @@ function CategoryServicesPage() {
   // cantidades por id de servicio  { [idServicio]: number }
   const [cantidades, setCantidades] = useState({});
 
-  // Cargar servicios
+  // Cargar servicios por categoría
   useEffect(() => {
     async function cargar() {
       try {
@@ -70,7 +70,7 @@ function CategoryServicesPage() {
       const qty = cantidades[serv.id] || 0;
       if (qty > 0) {
         algoSeleccionado = true;
-        addToCart(serv, qty); // aquí ya se suman cantidades y totales en el contexto
+        addToCart(serv, qty); // el contexto ya calcula totales
       }
     });
 
@@ -131,7 +131,7 @@ function CategoryServicesPage() {
         <p>No hay servicios disponibles en esta categoría.</p>
       )}
 
-      {/* “TABLA” DE SERVICIOS CON CONTADOR */}
+      {/* TABLA DE SERVICIOS */}
       {servicios.length > 0 && (
         <>
           <section className="services-table">
@@ -166,9 +166,7 @@ function CategoryServicesPage() {
                   </div>
 
                   {/* Precio */}
-                  <div className="col-precio">
-                    MX$ {precio.toFixed(2)}
-                  </div>
+                  <div className="col-precio">MX$ {precio.toFixed(2)}</div>
 
                   {/* Cantidad: - 0 + */}
                   <div className="col-cantidad">

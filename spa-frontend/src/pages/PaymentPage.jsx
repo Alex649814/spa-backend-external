@@ -1,3 +1,4 @@
+// src/pages/PaymentPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -11,7 +12,8 @@ function PaymentPage() {
     cartSubtotal,
     citaInfo,
     setPagoInfo,
-    clearCart,
+    // 👇 OJO: ya no usamos clearCart aquí
+    // clearCart,
   } = useBooking();
 
   // --- Campos de tarjeta ---
@@ -92,7 +94,7 @@ function PaymentPage() {
     const sanitizedCard = cardNumber.replace(/\s+/g, "");
     const total = Number(cartSubtotal.toFixed(2));
 
-    // 👉 Payload que espera TU backend (pagos.service):
+    // 👉 Payload que espera tu backend (pagos.service):
     const payload = {
       id_cita: citaInfo?.id_cita || citaInfo?.idCita || 1, // ajusta según tu flujo real
       monto: total,
@@ -150,14 +152,13 @@ function PaymentPage() {
         total,
       });
 
+      // Opcional: se muestra muy poquito porque enseguida navegamos
       setSuccessMsg("Pago aprobado correctamente. ¡Gracias!");
       setErrorMsg("");
 
-      // Limpiamos carrito y vamos a la pantalla de comprobante
-      setTimeout(() => {
-        clearCart();
-        navigate("/comprobante"); // 👈 aquí cambiamos a la nueva ruta
-      }, 1500);
+      // 👉 Ir directamente al comprobante
+      navigate("/comprobante");
+      // ⚠️ Ya NO limpiamos el carrito aquí para no disparar el useEffect que manda a "/"
     } catch (err) {
       console.error("Error al procesar el pago:", err);
       setErrorMsg(

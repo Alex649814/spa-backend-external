@@ -1,3 +1,5 @@
+/* src/pages/CategoryServicesPage.css */
+
 .category-page {
   padding: 40px 70px;
   background: #f5efe3;
@@ -12,7 +14,7 @@
   margin-bottom: 25px;
 }
 
-/* HERO: IMAGEN IZQUIERDA + DESCRIPCIÓN DERECHA (como antes) */
+/* HERO: IMAGEN IZQUIERDA + DESCRIPCIÓN DERECHA */
 .category-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr);
@@ -59,7 +61,7 @@
   font-weight: 600;
 }
 
-/* “TABLA” DE SERVICIOS (como tu diseño original) */
+/* “TABLA” DE SERVICIOS */
 .services-table {
   background: #fff;
   border-radius: 12px;
@@ -70,7 +72,7 @@
 /* Encabezado de columnas */
 .services-header-row {
   display: grid;
-  grid-template-columns: 2.7fr 1fr 1fr 1.1fr;
+  grid-template-columns: 2.8fr 1fr 1fr 0.9fr;
   font-weight: 600;
   font-size: 16px;
   margin-bottom: 10px;
@@ -88,7 +90,7 @@
 /* Cada fila de servicio */
 .service-row {
   display: grid;
-  grid-template-columns: 2.7fr 1fr 1fr 1.1fr;
+  grid-template-columns: 2.8fr 1fr 1fr 0.9fr;
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid #eee;
@@ -119,12 +121,15 @@
 
 /* Columna cantidad: contador - 0 + */
 .col-cantidad {
-  display: inline-flex;
+  /* ancho fijo para que no se mueva nada */
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: flex-start;
   gap: 4px;
+  width: 120px;
 }
 
+/* Botones y valor del contador */
 .qty-btn {
   width: 32px;
   height: 28px;
@@ -132,15 +137,26 @@
   background: #f4f4f4;
   cursor: pointer;
   font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.qty-btn:focus {
+  outline: none;
 }
 
 .qty-value {
-  min-width: 26px;
+  display: inline-block;
+  min-width: 30px;
   text-align: center;
   border-top: 1px solid #b2b2b2;
   border-bottom: 1px solid #b2b2b2;
   padding: 3px 6px;
   background: #fff;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* Botón grande al final (Agregar al carrito) */
@@ -183,8 +199,24 @@
     row-gap: 6px;
   }
 
+  .col-duracion-header,
+  .col-precio-header,
+  .col-cantidad-header {
+    display: none;
+  }
+
   .col-precio,
   .col-cantidad {
     justify-self: flex-start;
+  }
+
+  .col-duracion,
+  .col-precio {
+    margin-top: 4px;
+  }
+
+  .col-cantidad {
+    margin-top: 6px;
+    width: auto;
   }
 }

@@ -27,7 +27,7 @@ const enviarAlBanco = async (payload) => {
     nombre_cliente_tarjeta,
     mes_expiracion,
     anio_expiracion,
-    cvv
+    cvv,
   } = payload;
 
   // 🔎 Validaciones mínimas
@@ -70,7 +70,7 @@ const enviarAlBanco = async (payload) => {
       mes_expiracion,
       anio_expiracion,
       cvv,
-      monto
+      monto,
     ]
   );
 
@@ -82,7 +82,7 @@ const enviarAlBanco = async (payload) => {
     MesExp: mes_expiracion,
     AnioExp: anio_expiracion,
     Cvv: cvv,
-    Monto: monto
+    Monto: monto,
   });
 
   // 4) Actualizar la transacción bancaria con los datos del banco
@@ -119,13 +119,20 @@ const enviarAlBanco = async (payload) => {
       respuestaBanco.NombreEstado || null,
       respuestaBanco.Firma || null,
       respuestaBanco.Mensaje || null,
-      trx.insertId
+      trx.insertId,
     ]
   );
 
   // 5) Actualizar estatus del pago y de la cita según respuesta del banco
   const estadoBanco = (respuestaBanco.NombreEstado || "").toUpperCase();
-  const aprobada = estadoBanco === "ACEPTADA";
+  const mensajeBanco = (respuestaBanco.Mensaje || "").toUpperCase();
+
+  // Consideramos como aprobada: ACEPTADA, APROBADA, COMPLETADA
+  // o mensajes con "ÉXITO" / "APROBADO"
+  const aprobada =
+    ["ACEPTADA", "APROBADA", "COMPLETADA"].includes(estadoBanco) ||
+    mensajeBanco.includes("ÉXITO") ||
+    mensajeBanco.includes("APROBADO");
 
   const nuevoEstatusPago = aprobada ? "APROBADO" : "RECHAZADO";
   await db.query(
@@ -150,7 +157,7 @@ const enviarAlBanco = async (payload) => {
     id_transaccion_externa: idTransaccionBanco,
     respuesta_banco: respuestaBanco,
     estatus_pago: nuevoEstatusPago,
-    estatus_cita: nuevoEstatusCita
+    estatus_cita: nuevoEstatusCita,
   };
 };
 

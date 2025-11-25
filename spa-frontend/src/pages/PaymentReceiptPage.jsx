@@ -30,7 +30,7 @@ function formatSoloFecha(iso) {
 
 function PaymentReceiptPage() {
   const navigate = useNavigate();
-  const { pagoInfo } = useBooking();
+  const { pagoInfo, clearCart, setPagoInfo } = useBooking();
 
   // Si no hay info de pago, regresamos al inicio
   useEffect(() => {
@@ -82,38 +82,28 @@ function PaymentReceiptPage() {
     alert("Aquí iría la descarga del PDF de RESERVA (pendiente implementar).");
   };
 
+  // 👇 Nuevo: botón para volver al inicio y limpiar todo
+  const handleVolverInicio = () => {
+    clearCart();
+    if (setPagoInfo) setPagoInfo(null);
+    navigate("/");
+  };
+
   return (
     <div className="receipt-wrapper">
-      {/* Banda superior verde y título */}
-      <div className="receipt-top-bar" />
-      <header className="receipt-header">
-        <div className="receipt-header-inner">
-          <div className="header-logo-block">
-            <img
-              src="/logo-spa.png"
-              alt="Dream's Kingdom SPA"
-              className="header-logo"
-            />
-            <span className="header-logo-text">Dream&apos;s Kingdom SPA</span>
-          </div>
-          <h1 className="header-title">Comprobante de Pago / Reserva</h1>
-          <div className="header-spacer" />
-        </div>
-      </header>
-
-      {/* Cuerpo: dos columnas como en el diseño */}
       <main className="receipt-main">
         {/* Columna: comprobante de pago */}
         <section className="receipt-column">
           <div className="column-header">
             <img
-              src="/logo-spa.png"
+              src="/logo-dk.png"
               alt="Dream's Kingdom SPA"
               className="column-logo"
             />
             <p className="column-logo-text">Dream&apos;s Kingdom SPA</p>
           </div>
 
+          {/* Título oculto por CSS */}
           <h2 className="column-title">Comprobante de pago</h2>
           <p className="column-subtitle">{textoFechaPago}</p>
 
@@ -155,7 +145,11 @@ function PaymentReceiptPage() {
                 {pagoConfirmado ? "✓" : "!"}
               </div>
               <div className="status-text">
-                <p className={pagoConfirmado ? "status-title" : "status-title error"}>
+                <p
+                  className={
+                    pagoConfirmado ? "status-title" : "status-title error"
+                  }
+                >
                   {pagoConfirmado ? "Pago confirmado" : "Pago no aprobado"}
                 </p>
                 <p className="status-subtitle">
@@ -187,13 +181,14 @@ function PaymentReceiptPage() {
         <section className="receipt-column">
           <div className="column-header">
             <img
-              src="/logo-spa.png"
+              src="/logo-dk.png"
               alt="Dream's Kingdom SPA"
               className="column-logo"
             />
             <p className="column-logo-text">Dream&apos;s Kingdom SPA</p>
           </div>
 
+          {/* Título oculto por CSS */}
           <h2 className="column-title">Comprobante de reserva</h2>
           <p className="column-subtitle">{textoFechaSoloPago}</p>
 
@@ -253,24 +248,16 @@ function PaymentReceiptPage() {
         </section>
       </main>
 
-      {/* Footer con info de contacto como en el diseño */}
-      <footer className="receipt-footer">
-        <div className="footer-col">
-          <p className="label">Ubicación</p>
-          <p>Avenida Obregón 228</p>
-          <p>Hermosillo, Sonora 84620</p>
-        </div>
-        <div className="footer-col">
-          <p className="label">Horario</p>
-          <p>Lunes - Sábado</p>
-          <p>9 AM - 6 PM</p>
-        </div>
-        <div className="footer-col">
-          <p className="label">Contacto</p>
-          <p>+52 662 340 0361</p>
-          <p>DreamsKingdom@gmail.com</p>
-        </div>
-      </footer>
+      {/* 👇 Botón global para volver al inicio y limpiar carrito */}
+      <div className="receipt-back-row">
+        <button
+          type="button"
+          className="btn-download btn-home"
+          onClick={handleVolverInicio}
+        >
+          Volver al inicio
+        </button>
+      </div>
     </div>
   );
 }

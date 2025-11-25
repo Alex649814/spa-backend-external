@@ -1,8 +1,9 @@
 // src/services/banco.service.js
 import axios from "axios";
 
+// Endpoint real de Bancarata
 const BANK_API_URL =
-  process.env.BANK_API_URL || "https://bancarata-bank-api.vercel.app";
+  process.env.BANK_API_URL || "https://bancarata.vercel.app/api/bank";
 
 const NOMBRE_COMERCIO =
   process.env.BANCARATA_COMERCIO || "Dreams Kingdom SPA";
@@ -21,6 +22,7 @@ const enviarTransaccion = async (solicitud) => {
     Monto,
   } = solicitud;
 
+  // Payload que manda tu backend al banco
   const bodyBanco = {
     NombreComercio: NOMBRE_COMERCIO,
     NumeroTarjetaOrigen,
@@ -33,60 +35,36 @@ const enviarTransaccion = async (solicitud) => {
     Moneda: "MXN",
   };
 
-  const url = `${BANK_API_URL}/api/bank`;
+  const url = BANK_API_URL; // ya trae /api/bank
 
-  try {
-    console.log("[BANCO] Enviando solicitud a:", url);
-    console.log("[BANCO] Body:", bodyBanco);
+  console.log("[BANCO] Enviando solicitud a:", url);
+  console.log("[BANCO] Body:", bodyBanco);
 
-    const { data } = await axios.post(url, bodyBanco);
+  // Si aquí truena, dejamos que lance el error para que lo capture el controller
+  const { data } = await axios.post(url, bodyBanco);
 
-    console.log("[BANCO] Respuesta REAL:", data);
+  console.log("[BANCO] Respuesta REAL:", data);
 
-    const idTransaccion =
-      data.IdTransaccion || data.id_transaccion || `TRX-${Date.now()}`;
+  const idTransaccion =
+    data.IdTransaccion || data.id_transaccion || `TRX-${Date.now()}`;
 
-    return {
-      NombreComercio: NOMBRE_COMERCIO,
-      CreadaUTC: data.CreadaUTC || new Date().toISOString(),
-      IdTransaccion: idTransaccion,
-      TipoTransaccion: data.TipoTransaccion,
-      MontoTransaccion: data.MontoTransaccion ?? Monto,
-      Moneda: data.Moneda || "MXN",
-      MarcaTarjeta: data.MarcaTarjeta,
-      NumeroTarjeta: data.NumeroTarjeta,
-      NumeroAutorizacion: data.NumeroAutorizacion,
-      NombreEstado: data.NombreEstado,
-      Firma: data.Firma,
-      Mensaje: data.Mensaje,
-    };
-  } catch (error) {
-    // 👇 AQUÍ ACTIVAMOS EL MODO SIMULADO
-    console.error(
-      "[BANCO] Error llamando a Bancarata:",
-      error.response?.data || error.message
-    );
-
-    const ahora = new Date().toISOString();
-    const idFake = `TRX-MOCK-${Date.now()}`;
-
-    // ✅ RESPUESTA SIMULADA "ACEPTADA"
-    return {
-      NombreComercio: NOMBRE_COMERCIO,
-      CreadaUTC: ahora,
-      IdTransaccion: idFake,
-      TipoTransaccion: "TRANSFERENCIA",
-      MontoTransaccion: Monto,
-      Moneda: "MXN",
-      MarcaTarjeta: "VISA",
-      NumeroTarjeta: "**** **** **** 1111",
-      NumeroAutorizacion: "AUTH-MOCK-123456",
-      NombreEstado: "ACEPTADA",
-      Firma: "PIN",
-      Mensaje:
-        "Pago aprobado (simulado: la API Bancarata no está disponible actualmente)",
-    };
-  }
+  // Normalizamos la respuesta a un formato consistente
+  return {
+    NombreComercio: NOMBRE_COMERCIO,
+    CreadaUTC: data.CreadaUTC || new Date().toISOString(),
+    IdTransaccion: idTransaccion,
+    TipoTransaccion: data.TipoTransaccion || data.tipo_transaccion,
+    MontoTransaccion:
+      data.MontoTransaccion ?? data.monto ?? data.montoTransaccion ?? Monto,
+    Moneda: data.Moneda || data.moneda || "MXN",
+    MarcaTarjeta: data.MarcaTarjeta || data.marcaTarjeta,
+    NumeroTarjeta: data.NumeroTarjeta || data.numeroTarjeta,
+    NumeroAutorizacion:
+      data.NumeroAutorizacion || data.numeroAutorizacion || data.Autorizacion,
+    NombreEstado: data.NombreEstado || data.nombreEstado,
+    Firma: data.Firma || data.firma,
+    Mensaje: data.Mensaje || data.mensaje,
+  };
 };
 
 export default { enviarTransaccion };
