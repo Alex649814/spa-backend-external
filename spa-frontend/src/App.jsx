@@ -7,6 +7,7 @@ import BookingPage from "./pages/BookingPage.jsx";
 import PaymentPage from "./pages/PaymentPage.jsx";
 import Layout from "./components/Layout.jsx";
 import CartPage from "./pages/CartPage.jsx";
+import PaymentReceiptPage from "./pages/PaymentReceiptPage.jsx";
 
 /**
  * Hook interno para decidir qué título mostrar en el header
