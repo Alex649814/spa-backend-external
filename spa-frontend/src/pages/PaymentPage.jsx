@@ -21,7 +21,7 @@ function PaymentPage() {
   const [expYear, setExpYear] = useState("");
   const [cvv, setCvv] = useState("");
 
-  // --- Campos nuevos para comprobante ---
+  // --- Campos extra para comprobante ---
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
@@ -36,7 +36,6 @@ function PaymentPage() {
       return;
     }
     if (!citaInfo || !citaInfo.fechaCita || !citaInfo.horaCita) {
-      // que primero llenen la info en /reserva
       navigate("/reserva");
     }
   }, [cartItems, citaInfo, navigate]);
@@ -90,23 +89,23 @@ function PaymentPage() {
       return;
     }
 
-    // Número de tarjeta sin espacios para mandar al backend/banco
     const sanitizedCard = cardNumber.replace(/\s+/g, "");
+    const total = Number(cartSubtotal.toFixed(2));
 
-    // 👉 Payload de PRUEBA para enviar a tu backend
-    // (sigue el formato del banco como lo estás usando ahorita)
+    // 👉 Payload que espera TU backend (pagos.service):
     const payload = {
-      NombreComercio: "Dream’s Kingdom SPA",
-      NumeroTarjetaOrigen: sanitizedCard,
-      NumeroTarjetaDestino: "0000 0009 8765 4321", // cuenta del SPA
-      NombreCliente: cardName || citaInfo?.nombreCompleto,
-      MesExp: Number(expMonth),
-      AnioExp: Number(expYear),
-      Cvv: cvv,
-      Monto: Number(cartSubtotal.toFixed(2)),
-      Moneda: "MXN",
-      Email: email,
-      Telefono: phone,
+      id_cita: citaInfo?.id_cita || citaInfo?.idCita || 1, // ajusta según tu flujo real
+      monto: total,
+      numero_tarjeta_origen: sanitizedCard,
+      numero_tarjeta_destino: "0000 0009 8765 4321", // tarjeta del SPA
+      nombre_cliente_tarjeta: cardName || citaInfo?.nombreCompleto,
+      mes_expiracion: Number(expMonth),
+      anio_expiracion: Number(expYear),
+      cvv: cvv,
+
+      // Estos dos son solo para tu comprobante; el backend los puede ignorar
+      email: email,
+      telefono: phone,
     };
 
     try {
@@ -116,7 +115,7 @@ function PaymentPage() {
       const resp = await solicitarPago(payload);
       console.log("💳 Respuesta del backend/banco:", resp);
 
-      // Lógica de aprobación: añadimos lo que esperas de ejemplo
+      // Checamos si el pago fue aprobado con varios posibles campos
       const isApproved =
         resp?.NombreEstado === "ACEPTADA" ||
         resp?.NombreEstado === "APROBADA" ||
@@ -137,20 +136,19 @@ function PaymentPage() {
         return;
       }
 
-      // Guardar info de pago en el contexto (útil para el comprobante)
+      // Guardamos todo lo necesario para el comprobante
       setPagoInfo({
         ...resp,
         email,
         telefono: phone,
         citaInfo,
         items: cartItems,
-        total: Number(cartSubtotal.toFixed(2)),
+        total,
       });
 
       setSuccessMsg("Pago aprobado correctamente. ¡Gracias!");
       setErrorMsg("");
 
-      // Por ahora, solo limpiamos el carrito y mandamos a inicio después de unos segundos
       setTimeout(() => {
         clearCart();
         navigate("/");
@@ -205,7 +203,7 @@ function PaymentPage() {
                 placeholder="1234 5678 9000 0000"
                 value={cardNumber}
                 onChange={(e) => setCardNumber(e.target.value)}
-                autoComplete="off"       // ayuda a que el navegador no intervenga tanto
+                autoComplete="off"
                 inputMode="numeric"
               />
             </div>
@@ -237,7 +235,7 @@ function PaymentPage() {
                 <label>Año</label>
                 <input
                   type="number"
-                  placeholder="2027"
+                  placeholder="2030"
                   value={expYear}
                   onChange={(e) => setExpYear(e.target.value)}
                 />
