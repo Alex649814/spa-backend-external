@@ -111,7 +111,7 @@ function PaymentPage() {
       id_cita: idCita,
       monto: total,
       numero_tarjeta_origen: sanitizedCard,
-      numero_tarjeta_destino: "0000 0009 8765 4321", // tarjeta del SPA (igual que en backend)
+      numero_tarjeta_destino: "5555555555554444", // tarjeta del SPA (igual que en backend)
       nombre_cliente_tarjeta: cardName || citaInfo?.nombreCompleto,
       mes_expiracion: Number(expMonth),
       anio_expiracion: Number(expYear),

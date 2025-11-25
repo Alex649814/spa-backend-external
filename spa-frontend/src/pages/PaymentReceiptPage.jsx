@@ -58,7 +58,11 @@ function PaymentReceiptPage() {
     citaInfo?.nombreCompleto || banco?.NombreCliente || "Nombre del cliente";
   const servicioNombre =
     items[0]?.nombre || citaInfo?.servicioNombre || "Servicio reservado";
-  const duracionMinutos = citaInfo?.duracionMinutos || 60;
+  const duracionMinutos =
+  citaInfo?.duracionMinutos ??
+  citaInfo?.duracion_minutos ??
+  items[0]?.raw?.duracion_minutos ??
+  60;
   const fechaCita = citaInfo?.fechaCita || "-";
   const horaCita = citaInfo?.horaCita || "-";
   const codigoReserva =

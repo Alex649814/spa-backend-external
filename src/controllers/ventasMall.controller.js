@@ -6,20 +6,27 @@ import citasService from "../services/citas.service.js";
  * ------------------------------------------------------------------
  * - Recibe datos del Mall
  * - Llama al servicio para registrar la cita
- * - SOLO responde un OK técnico (no enviamos info de negocio todavía)
- * - Logs claros, bonitos y fáciles de leer en producción
+ * - Responde OK + datos clave de la venta/cita
  */
 export const registrarVentaMall = async (req, res) => {
   try {
     console.log("📥 [SPA] REG_VTA_SERV - Datos recibidos:");
     console.log(JSON.stringify(req.body, null, 2));
 
-    await citasService.registrarVenta(req.body);
+    const resultado = await citasService.registrarVenta(req.body);
 
-    console.log("✅ [SPA] Cita guardada correctamente en la BD.");
+    console.log("✅ [SPA] Cita guardada correctamente en la BD:", resultado);
 
+    // Respuesta pensada para el Mall
     return res.status(201).json({
-      message: "Cita registrada correctamente en SPA"
+      message: "Cita registrada correctamente en SPA",
+      venta_id_spa: resultado.id_cita,          // <- ID interno de la cita
+      codigo_reserva: resultado.codigo_reserva, // <- para mostrar al usuario
+      mall_order_id: resultado.mall_order_id,   // <- por si quieren correlacionar
+      estatus_cita: resultado.estatus_cita,
+      fecha_cita: resultado.fecha_cita,
+      hora_cita: resultado.hora_cita,
+      duracion_minutos: resultado.duracion_minutos,
     });
 
   } catch (error) {
@@ -43,4 +50,3 @@ export const registrarVentaMall = async (req, res) => {
     });
   }
 };
-

@@ -1,3 +1,4 @@
+// src/services/citas.service.js
 import db from "../db/connection.js";
 import {
   buscarEmpleadoDisponible,
@@ -143,101 +144,23 @@ const registrarVenta = async (payload) => {
     [codigoReserva, cita.insertId]
   );
 
-  // No es necesario devolver nada por ahora; el controller solo responde un mensaje.
-};
-
-
-
-const crearCitaWeb = async (data) => {
-  const {
-    store_id,
-    service_external_id,
-    customer_name,
-    customer_email,
-    customer_phone,
-    appointment_date,
-    appointment_time,
-    tipo_cabina
-  } = data;
-
-  // 1) Buscar servicio spa
-  const [serv] = await db.query(
-    "SELECT id_servicio, duracion_minutos FROM servicios WHERE id_servicio_externo = ? AND id_tienda = ?",
-    [service_external_id, store_id]
-  );
-
-  if (!serv.length) {
-    throw new Error("Servicio no encontrado");
-  }
-
-  const servicio = serv[0];
-
-  // 2) Buscar o crear cliente
-  const [clientRows] = await db.query(
-    "SELECT id_cliente FROM clientes WHERE correo = ? AND id_tienda = ?",
-    [customer_email, store_id]
-  );
-
-  let id_cliente;
-
-  if (clientRows.length) {
-    id_cliente = clientRows[0].id_cliente;
-  } else {
-    const [insertCliente] = await db.query(
-      `INSERT INTO clientes (id_tienda, nombre_completo, correo, telefono)
-       VALUES (?, ?, ?, ?)`,
-      [store_id, customer_name, customer_email, customer_phone]
-    );
-    id_cliente = insertCliente.insertId;
-  }
-
-  // 3) Calcular fechas
-  const fechaInicio = `${appointment_date} ${appointment_time}`;
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setMinutes(fechaFin.getMinutes() + servicio.duracion_minutos);
-
-  // 4) Registrar la cita
-  const [cita] = await db.query(
-    `INSERT INTO citas (
-        id_tienda,
-        id_servicio,
-        id_cliente,
-        fecha_cita,
-        hora_cita,
-        fecha_inicio,
-        fecha_fin,
-        duracion_minutos,
-        tipo_cabina_reservada,
-        estatus,
-        origen
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDIENTE_PAGO', 'SPA_WEB')`,
-    [
-      store_id,
-      servicio.id_servicio,
-      id_cliente,
-      appointment_date,
-      appointment_time,
-      fechaInicio,
-      fechaFin,
-      servicio.duracion_minutos,
-      tipo_cabina
-    ]
-  );
-
+  // 7. ⬅️⟵ AHORA SÍ REGRESAMOS INFO PARA EL MALL
   return {
     id_cita: cita.insertId,
-    fecha_inicio: fechaInicio,
-    fecha_fin: fechaFin,
-    duracion: servicio.duracion_minutos
+    codigo_reserva: codigoReserva,
+    mall_order_id: mallOrderId || null,
+    estatus_cita: estatusCita,
+    fecha_cita,
+    hora_cita: horaNormalizada,
+    duracion_minutos: dur,
   };
+};
+
+const crearCitaWeb = async (data) => {
+  // ... tu código tal cual lo tienes ...
 };
 
 export default {
   registrarVenta,
-  crearCitaWeb   // 👈 AGREGA ESTA LÍNEA
+  crearCitaWeb,
 };
-
-
-
-
