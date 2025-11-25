@@ -1,3 +1,6 @@
+// src/controllers/pagos.controller.js
+import pagosService from "../services/pagos.service.js";
+
 export const solicitarTransaccion = async (req, res) => {
   try {
     const respuesta = await pagosService.enviarAlBanco(req.body);
@@ -5,13 +8,12 @@ export const solicitarTransaccion = async (req, res) => {
   } catch (e) {
     console.error("[PAGOS] Error al solicitar transacción:", e);
 
-    // Si el error viene de axios (banco), normalmente trae response.data
-    const bankData = e.response?.data;
+    const bankData = e.response?.data || null;
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Error al solicitar transacción",
       message: e.message,
-      banco: bankData || null,
+      banco: bankData,
     });
   }
 };
