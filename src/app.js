@@ -3,7 +3,6 @@ import catalogoRoutes from "./routes/catalogo.routes.js";
 import disponibilidadRoutes from "./routes/disponibilidad.routes.js"; 
 import ventasMallRoutes from "./routes/ventasMall.routes.js"; 
 import pagosRoutes from "./routes/pagos.routes.js"; 
-import bancoRoutes from "./routes/banco.routes.js"; 
 import categoriasRoutes from "./routes/categorias.routes.js";
 
 import cors from "cors";
@@ -22,10 +21,10 @@ app.use(cors({
   methods: "GET,POST,PUT,DELETE",
   credentials: true
 }));
+
 app.use("/api", catalogoRoutes); 
 app.use("/api", disponibilidadRoutes); 
 app.use("/api", ventasMallRoutes); 
 app.use("/api", pagosRoutes); 
-app.use("/api", bancoRoutes); 
 app.use("/api", categoriasRoutes);
 export default app;

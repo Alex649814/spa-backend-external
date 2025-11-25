@@ -4,27 +4,16 @@ import axios from "axios";
 const BANK_API_URL =
   process.env.BANK_API_URL || "https://bancarata-bank-api.vercel.app";
 
-/**
- * ENVÍO REAL AL BANCO BANCARATA
- *
- * Recibe algo así (desde pagos.service):
- * {
- *   NumeroTarjetaOrigen,
- *   NumeroTarjetaDestino,
- *   NombreCliente,
- *   MesExp,
- *   AnioExp,
- *   Cvv,
- *   Monto
- * }
- *
- * Llama a POST BANK_API_URL/api/bank y devuelve la respuesta
- * en un formato uniforme para tu backend.
- */
+const NOMBRE_COMERCIO =
+  process.env.BANCARATA_COMERCIO || "Dream’s Kingdom SPA";
+
+const TARJETA_COMERCIO =
+  process.env.BANCARATA_TARJETA_COMERCIO || "0000 0009 8765 4321";
+
 const enviarTransaccion = async (solicitud) => {
   const {
     NumeroTarjetaOrigen,
-    NumeroTarjetaDestino,
+    NumeroTarjetaDestino, // opcional
     NombreCliente,
     MesExp,
     AnioExp,
@@ -32,15 +21,16 @@ const enviarTransaccion = async (solicitud) => {
     Monto
   } = solicitud;
 
-  // Body EXACTO que espera BANCARATA
   const bodyBanco = {
+    NombreComercio: NOMBRE_COMERCIO,
     NumeroTarjetaOrigen,
-    NumeroTarjetaDestino,
+    NumeroTarjetaDestino: NumeroTarjetaDestino || TARJETA_COMERCIO,
     NombreCliente,
     MesExp,
     AnioExp,
     Cvv,
-    Monto
+    Monto,
+    Moneda: "MXN"
   };
 
   const url = `${BANK_API_URL}/api/bank`;
@@ -52,21 +42,16 @@ const enviarTransaccion = async (solicitud) => {
 
   console.log("[BANCO] Respuesta recibida:", data);
 
-  // data desde BANCARATA:
-  // CreadaUTC, id_transaccion, TipoTransaccion, MontoTransaccion,
-  // MarcaTarjeta, NumeroTarjeta, NumeroAutorizacion, NombreEstado, Firma, Mensaje
-
   const idTransaccion =
     data.IdTransaccion || data.id_transaccion || `TRX-${Date.now()}`;
 
-  // Adaptamos a un formato estándar para el resto del sistema
   return {
-    NombreComercio: "Dream’s Kingdom SPA",
-    CreadaUTC: data.CreadaUTC,
+    NombreComercio: NOMBRE_COMERCIO,
+    CreadaUTC: data.CreadaUTC || new Date().toISOString(),
     IdTransaccion: idTransaccion,
     TipoTransaccion: data.TipoTransaccion,
-    MontoTransaccion: data.MontoTransaccion,
-    Moneda: "MXN",
+    MontoTransaccion: data.MontoTransaccion ?? Monto,
+    Moneda: data.Moneda || "MXN",
     MarcaTarjeta: data.MarcaTarjeta,
     NumeroTarjeta: data.NumeroTarjeta,
     NumeroAutorizacion: data.NumeroAutorizacion,
