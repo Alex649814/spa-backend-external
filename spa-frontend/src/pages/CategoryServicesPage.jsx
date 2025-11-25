@@ -1,48 +1,44 @@
 // src/pages/CategoryServicesPage.jsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import {
-  getServiciosPorCategoria,
-  getCategorias
-} from "../api/spaApi.js";
+import { getServiciosPorCategoria, getCategorias } from "../api/spaApi.js";
 import { useBooking } from "../context/BookingContext.jsx";
+import "./CategoryServicesPage.css";
 
 function CategoryServicesPage() {
-  const { idCategoria } = useParams();      // 👈 importante que coincida con la ruta
+  const { idCategoria } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setSelectedService } = useBooking();
 
-  // Si venimos desde CategoriesPage, ya traemos la categoría en state
+  // del contexto: función para agregar al carrito
+  const { addToCart } = useBooking();
+
   const [categoria, setCategoria] = useState(location.state?.categoria || null);
   const [servicios, setServicios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+
+  // cantidades por id de servicio  { [idServicio]: number }
+  const [cantidades, setCantidades] = useState({});
 
   // Cargar servicios
   useEffect(() => {
     async function cargar() {
       try {
-        setLoading(true);
         const data = await getServiciosPorCategoria(idCategoria);
-        setServicios(data);
-      } catch (err) {
-        console.error("Error cargando servicios:", err);
-        setError("Error al cargar los servicios.");
+        setServicios(data || []);
+      } catch (error) {
+        console.error("Error cargando servicios:", error);
       } finally {
         setLoading(false);
       }
     }
-
-    if (idCategoria) {
-      cargar();
-    }
+    cargar();
   }, [idCategoria]);
 
-  // Si no traemos la categoría por state, la buscamos en /categorias
+  // Cargar categoría (para nombre, descripción, imagen)
   useEffect(() => {
     async function cargarCategoria() {
-      if (!categoria && idCategoria) {
+      if (!categoria) {
         try {
           const cats = await getCategorias();
           const found = cats.find(
@@ -57,102 +53,157 @@ function CategoryServicesPage() {
     cargarCategoria();
   }, [categoria, idCategoria]);
 
-  const handleMasTratamientos = () => {
-    navigate("/"); // te regresa a la página de categorías
+  // Cambiar cantidad de un servicio
+  const handleChangeCantidad = (idServicio, delta) => {
+    setCantidades((prev) => {
+      const actual = prev[idServicio] || 0;
+      const nueva = Math.max(0, actual + delta); // nunca menos de 0
+      return { ...prev, [idServicio]: nueva };
+    });
   };
 
-  const handleAgregarAlCarrito = (servicio) => {
-    // Aquí podrías agregar al carrito real;
-    // por ahora lo dejamos como "seleccionar servicio" + ir a reserva
-    setSelectedService(servicio);
-    navigate("/reserva");
+  // Botón "Agregar al carrito" (único al final)
+  const handleAgregarCarrito = () => {
+    let algoSeleccionado = false;
+
+    servicios.forEach((serv) => {
+      const qty = cantidades[serv.id] || 0;
+      if (qty > 0) {
+        algoSeleccionado = true;
+        addToCart(serv, qty); // aquí ya se suman cantidades y totales en el contexto
+      }
+    });
+
+    if (!algoSeleccionado) {
+      alert("Selecciona al menos 1 tratamiento antes de continuar.");
+      return;
+    }
+
+    // Opcional: limpiar cantidades después de agregar
+    // setCantidades({});
+
+    // Ir a la pantalla de carrito
+    navigate("/carrito");
   };
 
-  const titulo = categoria?.nombre || "Servicios";
-  const descripcionCategoria = categoria?.descripcion || "";
+  if (loading) {
+    return (
+      <div className="category-page">
+        <p>Cargando servicios...</p>
+      </div>
+    );
+  }
 
   return (
-    <main className="spa-page spa-page--category">
-      {/* Encabezado de la categoría */}
-      <section className="category-detail-header">
-        <div className="category-detail-header__title-row">
-          <h1 className="category-detail-title">{titulo.toUpperCase()}</h1>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleMasTratamientos}
-          >
-            Más tratamientos
-          </button>
-        </div>
+    <div className="category-page">
+      {/* TÍTULO SUPERIOR (MASAJES, FACIALES, etc.) */}
+      <h1 className="category-title">
+        {categoria?.nombre?.toUpperCase() || "CATEGORÍA"}
+      </h1>
 
-        {descripcionCategoria && (
-          <div className="category-detail-description">
-            {descripcionCategoria}
+      {/* HERO: IMAGEN + DESCRIPCIÓN EN CUADRO GRIS (2 columnas) */}
+      <section className="category-hero">
+        {categoria?.imagen_url && (
+          <img
+            src={categoria.imagen_url}
+            alt={categoria.nombre}
+            className="category-main-image"
+          />
+        )}
+
+        {categoria?.descripcion && (
+          <div className="category-description-box">
+            {categoria.descripcion}
           </div>
         )}
       </section>
 
-      {loading && <p>Cargando servicios...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* BARRA CON TEXTO + BOTÓN "Más tratamientos" */}
+      <div className="category-header-bar">
+        <h2>SELECCIONA EL TRATAMIENTO</h2>
+        <button className="btn-volver" onClick={() => navigate("/")}>
+          Más tratamientos
+        </button>
+      </div>
 
-      {!loading && !error && servicios.length === 0 && (
+      {/* Si no hay servicios */}
+      {servicios.length === 0 && (
         <p>No hay servicios disponibles en esta categoría.</p>
       )}
 
-      {!loading && !error && servicios.length > 0 && (
-        <section className="category-services-list">
-          {servicios.map((servicio) => (
-            <article key={servicio.id} className="service-row">
-              <div className="service-row__main">
-                <div className="service-row__label">Servicio</div>
-                <div className="service-row__name">
-                  {servicio.nombre}
-                  {servicio.duracion_minutos && (
-                    <span className="service-row__duration">
-                      {" "}
-                      — {servicio.duracion_minutos} Min.
-                    </span>
-                  )}
-                </div>
-                {servicio.description && (
-                  <div className="service-row__description">
-                    {servicio.description}
+      {/* “TABLA” DE SERVICIOS CON CONTADOR */}
+      {servicios.length > 0 && (
+        <>
+          <section className="services-table">
+            {/* Encabezados */}
+            <div className="services-header-row">
+              <div className="col-servicio-header">Servicio</div>
+              <div className="col-duracion-header">Duración</div>
+              <div className="col-precio-header">Precio</div>
+              <div className="col-cantidad-header">Cantidad</div>
+            </div>
+
+            {/* Filas */}
+            {servicios.map((serv) => {
+              const qty = cantidades[serv.id] || 0;
+              const precio = Number(serv.precio || 0);
+
+              return (
+                <div key={serv.id} className="service-row">
+                  {/* Servicio: nombre + descripción */}
+                  <div className="col-servicio">
+                    <div className="service-name">{serv.nombre}</div>
+                    {serv.description && (
+                      <div className="service-short-desc">
+                        {serv.description}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="service-row__meta">
-                <div>
-                  <div className="service-row__label">Duración</div>
-                  <div>{servicio.duracion_minutos || "--"} Min.</div>
-                </div>
-                <div>
-                  <div className="service-row__label">Precio</div>
-                  <div>MX$ {Number(servicio.precio).toFixed(2)}</div>
-                </div>
-                <div>
-                  <div className="service-row__label">Cantidad</div>
-                  {/* Aquí luego metemos los botones +/-.
-                      Por ahora solo un placeholder "1". */}
-                  <div>1</div>
-                </div>
-              </div>
+                  {/* Duración */}
+                  <div className="col-duracion">
+                    {serv.duracion_minutos || "--"} Min.
+                  </div>
 
-              <div className="service-row__actions">
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => handleAgregarAlCarrito(servicio)}
-                >
-                  Agregar al carrito
-                </button>
-              </div>
-            </article>
-          ))}
-        </section>
+                  {/* Precio */}
+                  <div className="col-precio">
+                    MX$ {precio.toFixed(2)}
+                  </div>
+
+                  {/* Cantidad: - 0 + */}
+                  <div className="col-cantidad">
+                    <button
+                      type="button"
+                      className="qty-btn"
+                      onClick={() => handleChangeCantidad(serv.id, -1)}
+                    >
+                      −
+                    </button>
+                    <span className="qty-value">{qty}</span>
+                    <button
+                      type="button"
+                      className="qty-btn"
+                      onClick={() => handleChangeCantidad(serv.id, 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+
+          {/* Botón grande al final */}
+          <button
+            className="btn-primary btn-add-bottom"
+            type="button"
+            onClick={handleAgregarCarrito}
+          >
+            Agregar al carrito
+          </button>
+        </>
       )}
-    </main>
+    </div>
   );
 }
 

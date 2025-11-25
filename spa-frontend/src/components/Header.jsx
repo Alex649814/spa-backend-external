@@ -1,6 +1,6 @@
 // src/components/Header.jsx
 
-function Header({ pageTitle = "Servicios" }) {
+function Header({ title }) {
   return (
     <header className="spa-header">
       <div className="spa-header__topbar" />
@@ -13,7 +13,7 @@ function Header({ pageTitle = "Servicios" }) {
           className="spa-header__logo-img"
         />
 
-        <div className="spa-header__page-title">{pageTitle}</div>
+        <div className="spa-header__page-title">{title}</div>
       </div>
 
       <div className="spa-header__divider" />

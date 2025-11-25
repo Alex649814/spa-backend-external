@@ -1,17 +1,18 @@
 // src/components/Layout.jsx
-import Header from "./Header";
-import Footer from "./Footer";
+import Header from "./Header.jsx";
+import Footer from "./Footer.jsx";
 
-function Layout({ children, pageTitle }) {
+function Layout({ children, headerTitle }) {
   return (
-    <div className="app-shell">
-      {/* Header recibe el título de la página, por defecto "Servicios" */}
-      <Header pageTitle={pageTitle} />
+    <>
+      {/* El header ahora usa el título dinámico */}
+      <Header title={headerTitle} />
+
       <main>{children}</main>
+
       <Footer />
-    </div>
+    </>
   );
 }
 
 export default Layout;
-

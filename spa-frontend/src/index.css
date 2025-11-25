@@ -352,3 +352,194 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ====== BOOKING / RESERVA ====== */
+
+.booking-page {
+  padding: 40px 70px;
+  background: #f5efe3;
+}
+
+.booking-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 25px;
+}
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+  gap: 40px;
+}
+
+/* Columna izquierda */
+.booking-left {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  padding: 25px 30px;
+}
+
+.booking-field {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-field label {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.booking-field input[type="text"],
+.booking-field input[type="date"],
+.booking-field select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.booking-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+
+.booking-checkbox input[type="checkbox"] {
+  transform: scale(1.1);
+}
+
+/* Lista de servicios en la izquierda */
+.booking-services-list {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #faf7f2;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-service-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.booking-service-item .service-name {
+  font-weight: 500;
+}
+
+.booking-service-item .service-price {
+  font-weight: 600;
+}
+
+/* Mensaje de disponibilidad */
+.disponibilidad-message {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.disponibilidad-message.ok {
+  background: #e3f7e5;
+  border: 1px solid #5bbf6a;
+  color: #216331;
+}
+
+.disponibilidad-message.error {
+  background: #fde8e8;
+  border: 1px solid #f28b82;
+  color: #b3261e;
+}
+
+/* Botones en fila */
+.booking-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn-secondary,
+.btn-outline {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #b49a79;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  background: #e9dfcf;
+}
+
+.btn-outline {
+  background: #ffffff;
+}
+
+.btn-secondary:hover,
+.btn-outline:hover {
+  filter: brightness(0.97);
+}
+
+/* Reutilizamos .btn-primary de antes, sólo por si acá se usa distinto */
+.booking-buttons-row .btn-primary {
+  flex: 1;
+  max-width: 220px;
+}
+
+/* Columna derecha: resumen */
+.booking-right {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  padding: 25px 30px;
+}
+
+.booking-right h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.booking-summary-box {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+}
+
+.summary-total {
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+.summary-extra {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .booking-page {
+    padding: 25px 15px;
+  }
+
+  .booking-layout {
+    grid-template-columns: 1fr;
+  }
+}

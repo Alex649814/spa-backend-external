@@ -1,0 +1,190 @@
+.category-page {
+  padding: 40px 70px;
+  background: #f5efe3;
+}
+
+/* TÍTULO SUPERIOR (MASAJES, ETC.) */
+.category-title {
+  font-size: 45px;
+  color: #2c2c2c;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 25px;
+}
+
+/* HERO: IMAGEN IZQUIERDA + DESCRIPCIÓN DERECHA (como antes) */
+.category-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr);
+  gap: 25px;
+  margin-bottom: 35px;
+}
+
+.category-main-image {
+  width: 100%;
+  max-height: 350px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.category-description-box {
+  background: #eae4db;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 18px;
+  color: #444;
+}
+
+/* BARRA CON “SELECCIONA EL TRATAMIENTO” + BOTÓN */
+.category-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 35px 0 20px;
+}
+
+.category-header-bar h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.btn-volver {
+  background: #b49a79;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* “TABLA” DE SERVICIOS (como tu diseño original) */
+.services-table {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  padding: 20px 25px 10px;
+}
+
+/* Encabezado de columnas */
+.services-header-row {
+  display: grid;
+  grid-template-columns: 2.7fr 1fr 1fr 1.1fr;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+.col-servicio-header,
+.col-duracion-header,
+.col-precio-header,
+.col-cantidad-header {
+  color: #3b3b3b;
+}
+
+/* Cada fila de servicio */
+.service-row {
+  display: grid;
+  grid-template-columns: 2.7fr 1fr 1fr 1.1fr;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+
+/* Columna "Servicio" */
+.col-servicio {
+  padding-right: 15px;
+}
+
+.service-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.service-short-desc {
+  font-size: 14px;
+  color: #555;
+}
+
+/* Duración y precio */
+.col-duracion,
+.col-precio {
+  font-size: 15px;
+  color: #444;
+}
+
+/* Columna cantidad: contador - 0 + */
+.col-cantidad {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 28px;
+  border: 1px solid #b2b2b2;
+  background: #f4f4f4;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.qty-value {
+  min-width: 26px;
+  text-align: center;
+  border-top: 1px solid #b2b2b2;
+  border-bottom: 1px solid #b2b2b2;
+  padding: 3px 6px;
+  background: #fff;
+}
+
+/* Botón grande al final (Agregar al carrito) */
+.btn-primary {
+  margin-top: 25px;
+  width: 100%;
+  padding: 14px;
+  background: #b49a79;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+/* Por si quieres clases extra para el botón inferior */
+.btn-add-bottom {
+  margin-top: 25px;
+  margin-bottom: 40px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .category-page {
+    padding: 25px 15px;
+  }
+
+  .category-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .services-header-row,
+  .service-row {
+    grid-template-columns: 1.8fr 1fr;
+    row-gap: 6px;
+  }
+
+  .col-precio,
+  .col-cantidad {
+    justify-self: flex-start;
+  }
+}

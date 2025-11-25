@@ -33,9 +33,31 @@ export async function getServiciosPorCategoria(idCategoria) {
 // --------- DISPONIBILIDAD ---------
 export async function verificarDisponibilidad(body) {
   const res = await api.post("/disponibilidad", body);
-  return res.data;
-}
+  const data = res.data;
 
+  // 🔧 Normalización para frontend SPA:
+  // Caso 1: backend respondió en formato interno { disponible: true/false, ... }
+  if (typeof data?.disponible !== "undefined") {
+    return data;
+  }
+
+  // Caso 2: backend respondió en formato MALL (servicio_id, fecha_inicio, etc.)
+  // => interpretamos que HAY disponibilidad
+  if (data && data.servicio_id) {
+    return {
+      disponible: true,
+      id_servicio: data.servicio_id,
+      fecha_inicio: data.fecha_inicio,
+      fecha_fin: data.fecha_fin,
+      duracion_minutos: data.duracion_minutos,
+      id_empleado_sugerido: data.id_barbero,
+      raw: data, // por si luego quieres usar el objeto original
+    };
+  }
+
+  // Si llega otra cosa rara, la regresamos tal cual
+  return data;
+}
 // --------- CITAS WEB ---------
 export async function crearCitaWeb(body) {
   const res = await api.post("/web", body);
