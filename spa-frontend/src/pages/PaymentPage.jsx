@@ -12,8 +12,6 @@ function PaymentPage() {
     cartSubtotal,
     citaInfo,
     setPagoInfo,
-    // 👇 OJO: ya no usamos clearCart aquí
-    // clearCart,
   } = useBooking();
 
   // --- Campos de tarjeta ---
@@ -31,13 +29,19 @@ function PaymentPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Si no hay carrito o no hay cita básica, regresamos
+  // Si no hay carrito o no hay cita básica con id_cita, regresamos
   useEffect(() => {
     if (!cartItems || cartItems.length === 0) {
       navigate("/");
       return;
     }
-    if (!citaInfo || !citaInfo.fechaCita || !citaInfo.horaCita) {
+    if (
+      !citaInfo ||
+      !citaInfo.fechaCita ||
+      !citaInfo.horaCita ||
+      !citaInfo.id_cita
+    ) {
+      // Si no hay cita o no tiene id_cita, regresamos a la pantalla de reserva
       navigate("/reserva");
     }
   }, [cartItems, citaInfo, navigate]);
@@ -56,10 +60,14 @@ function PaymentPage() {
     if (!expMonth || !expYear) return "Ingresa la fecha de vencimiento.";
     const mes = Number(expMonth);
     const anio = Number(expYear);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
     if (mes < 1 || mes > 12) return "El mes de vencimiento no es válido.";
-    if (!anio || anio < new Date().getFullYear()) {
-      return "El año de vencimiento no es válido.";
-    }
+    if (!anio || anio < currentYear) return "El año de vencimiento no es válido.";
+    if (anio === currentYear && mes < currentMonth)
+      return "La tarjeta ya expiró.";
 
     if (!cvv.trim()) return "Ingresa el CVV.";
     if (cvv.length < 3 || cvv.length > 4) return "El CVV no es válido.";
@@ -76,6 +84,8 @@ function PaymentPage() {
 
     if (!citaInfo?.fechaCita || !citaInfo?.horaCita)
       return "Falta la fecha u hora de la cita.";
+    if (!citaInfo?.id_cita)
+      return "No se encontró la cita asociada. Vuelve a la pantalla de reserva.";
     if (!cartItems || cartItems.length === 0) return "El carrito está vacío.";
 
     return null;
@@ -94,12 +104,14 @@ function PaymentPage() {
     const sanitizedCard = cardNumber.replace(/\s+/g, "");
     const total = Number(cartSubtotal.toFixed(2));
 
-    // 👉 Payload que espera tu backend (pagos.service):
+    // id_cita DEBE venir de citaInfo (creada en BookingPage)
+    const idCita = citaInfo?.id_cita;
+
     const payload = {
-      id_cita: citaInfo?.id_cita || citaInfo?.idCita || 1, // ajusta según tu flujo real
+      id_cita: idCita,
       monto: total,
       numero_tarjeta_origen: sanitizedCard,
-      numero_tarjeta_destino: "0000 0009 8765 4321", // tarjeta del SPA
+      numero_tarjeta_destino: "0000 0009 8765 4321", // tarjeta del SPA (igual que en backend)
       nombre_cliente_tarjeta: cardName || citaInfo?.nombreCompleto,
       mes_expiracion: Number(expMonth),
       anio_expiracion: Number(expYear),
@@ -117,25 +129,16 @@ function PaymentPage() {
       const resp = await solicitarPago(payload);
       console.log("💳 Respuesta del backend/banco:", resp);
 
-      // La respuesta real del banco viene anidada en resp.respuesta_banco
+      // Tu backend ya regresa estos campos:
+      // id_pago, id_transaccion_banco, id_transaccion_externa,
+      // respuesta_banco, estatus_pago, estatus_cita
       const banco = resp?.respuesta_banco || resp;
 
-      // Checamos si el pago fue aprobado con varios posibles campos
-      const isApproved =
-        (banco?.NombreEstado || "").toUpperCase() === "ACEPTADA" ||
-        (banco?.NombreEstado || "").toUpperCase() === "APROBADA" ||
-        banco?.Mensaje === "Pago aprobado" ||
-        banco?.aprobado === true ||
-        banco?.estatus === "APROBADA" ||
-        banco?.status === "APPROVED" ||
-        !!banco?.codigoAutorizacion ||
-        !!banco?.AuthorizationCode;
-
-      if (!isApproved) {
+      // 👇 Nos basamos en el estatus que calcula tu backend
+      if (resp.estatus_pago !== "APROBADO") {
         const msg =
           banco?.Mensaje ||
           banco?.mensaje ||
-          banco?.motivo ||
           "El banco rechazó la transacción. Verifica los datos.";
         setErrorMsg(msg);
         return;
@@ -152,18 +155,18 @@ function PaymentPage() {
         total,
       });
 
-      // Opcional: se muestra muy poquito porque enseguida navegamos
       setSuccessMsg("Pago aprobado correctamente. ¡Gracias!");
       setErrorMsg("");
 
       // 👉 Ir directamente al comprobante
       navigate("/comprobante");
-      // ⚠️ Ya NO limpiamos el carrito aquí para no disparar el useEffect que manda a "/"
     } catch (err) {
       console.error("Error al procesar el pago:", err);
-      setErrorMsg(
-        "Ocurrió un error al procesar el pago. Intenta de nuevo más tarde."
-      );
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Ocurrió un error al procesar el pago. Intenta de nuevo más tarde.";
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -346,6 +349,12 @@ function PaymentPage() {
                 <p>
                   <strong>Cliente:</strong> {citaInfo.nombreCompleto}
                 </p>
+                {citaInfo.codigo_reserva && (
+                  <p>
+                    <strong>Código de reserva:</strong>{" "}
+                    {citaInfo.codigo_reserva}
+                  </p>
+                )}
               </div>
             )}
           </div>
