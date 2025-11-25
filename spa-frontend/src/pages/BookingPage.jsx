@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBooking } from "../context/BookingContext.jsx";
-import { verificarDisponibilidad } from "../api/spaApi.js";
+import {
+  verificarDisponibilidad,
+  crearCitaWeb,
+} from "../api/spaApi.js";
 
 function BookingPage() {
   const navigate = useNavigate();
@@ -104,7 +107,6 @@ function BookingPage() {
           const resp = await verificarDisponibilidad(payload);
           console.log("Resp disponibilidad", fechaISO, hora, resp);
 
-          // 💡 Ahora resp.disponible viene bien gracias a spaApi.js
           if (!resp || resp.disponible !== true) {
             disponibleParaTodos = false;
             break;
@@ -155,7 +157,7 @@ function BookingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fechaCita, cartItems]);
 
-  const handleProcederPagar = () => {
+  const handleProcederPagar = async () => {
     const errorForm = validarFormularioBasico();
     if (errorForm) {
       setStatusDisponibilidad({ tipo: "error", mensaje: errorForm });
@@ -177,14 +179,84 @@ function BookingPage() {
       return;
     }
 
-    setCitaInfo({
-      nombreCompleto,
-      fechaCita,
-      horaCita,
-      aceptaPoliticas,
-    });
+    if (!cartItems || cartItems.length === 0) {
+      setStatusDisponibilidad({
+        tipo: "error",
+        mensaje: "Tu carrito está vacío.",
+      });
+      return;
+    }
 
-    navigate("/pago");
+    // Por ahora tomamos el PRIMER servicio del carrito para la cita
+    const servicioPrincipal = cartItems[0];
+
+    const serviceExternalId =
+      servicioPrincipal.service_external_id ||
+      servicioPrincipal.id_servicio_externo ||
+      servicioPrincipal.id_servicio ||
+      servicioPrincipal.id;
+
+    if (!serviceExternalId) {
+      setStatusDisponibilidad({
+        tipo: "error",
+        mensaje:
+          "No se pudo identificar el servicio seleccionado. Intenta agregarlo de nuevo al carrito.",
+      });
+      return;
+    }
+
+    try {
+      setChecking(true);
+      setStatusDisponibilidad(null);
+
+      // 🧱 Payload que espera el backend (citasWeb.service.js)
+      const payloadCita = {
+        store_id: 2, // id_tienda que estás usando en disponibilidad
+        service_external_id: serviceExternalId,
+        appointment_date: fechaCita,
+        appointment_time: horaCita,
+        customer_name: nombreCompleto,
+        customer_email: null, // aquí luego puedes conectar correo real
+        customer_phone: null, // y teléfono si lo agregas al formulario
+        tipo_cabina: null,
+      };
+
+      console.log("➡️ Enviando crearCitaWeb:", payloadCita);
+      const resp = await crearCitaWeb(payloadCita);
+      console.log("✅ Cita creada desde web:", resp);
+
+      // resp trae: id_cita, codigo_reserva, fecha_inicio, fecha_fin, duracion_minutos, id_empleado...
+      setCitaInfo({
+        nombreCompleto,
+        fechaCita,
+        horaCita,
+        aceptaPoliticas,
+        id_cita: resp.id_cita,
+        codigo_reserva: resp.codigo_reserva,
+        fecha_inicio: resp.fecha_inicio,
+        fecha_fin: resp.fecha_fin,
+        duracion_minutos: resp.duracion_minutos,
+        id_empleado: resp.id_empleado,
+      });
+
+      // Ahora sí pasamos a la pantalla de pago
+      navigate("/pago");
+    } catch (err) {
+      console.error("❌ Error al crear la cita web:", err);
+
+      const msg =
+        err.response?.data?.detalle ||
+        err.response?.data?.error ||
+        err.message ||
+        "Error al crear la cita. Intenta nuevamente.";
+
+      setStatusDisponibilidad({
+        tipo: "error",
+        mensaje: msg,
+      });
+    } finally {
+      setChecking(false);
+    }
   };
 
   const handleRegresarCarrito = () => {
@@ -291,7 +363,7 @@ function BookingPage() {
               onClick={handleProcederPagar}
               disabled={checking || !availableTimes.length}
             >
-              {checking ? "Verificando..." : "Proceder a pagar"}
+              {checking ? "Procesando..." : "Proceder a pagar"}
             </button>
           </div>
         </div>
@@ -322,7 +394,9 @@ function BookingPage() {
               ) : fechaCita ? (
                 <p>Selecciona una hora disponible para completar la reserva.</p>
               ) : (
-                <p>Selecciona fecha y hora para ver el resumen completo.</p>
+                <p>
+                  Selecciona fecha y hora para ver el resumen completo.
+                </p>
               )}
             </div>
           </div>
