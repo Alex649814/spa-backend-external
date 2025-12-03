@@ -58,10 +58,9 @@ const enviarAlBanco = async (payload) => {
         mes_expiracion,
         anio_expiracion,
         cvv,
-        monto,
-        moneda
+        monto
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MXN')`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       pago.insertId,
       numero_tarjeta_origen,
@@ -98,34 +97,32 @@ const enviarAlBanco = async (payload) => {
      SET
        tipo_transaccion         = ?,
        creada_utc               = ?,
-       nombre_comercio          = ?,
        id_transaccion_externa   = ?,
-       marca_tarjeta            = ?,
+       monto_transaccion        = ?,
        numero_tarjeta_mascarada = ?,
-       numero_autorizacion      = ?,
        nombre_estado            = ?,
        firma                    = ?,
-       mensaje                  = ?,
+       descripcion              = ?,
        fecha_actualizacion      = NOW()
      WHERE id_transaccion_banco = ?`,
     [
       respuestaBanco.TipoTransaccion || null,
       creadaMysql,
-      respuestaBanco.NombreComercio || "Dream’s Kingdom SPA",
       idTransaccionBanco,
-      respuestaBanco.MarcaTarjeta || null,
+      respuestaBanco.MontoTransaccion ?? monto,
       respuestaBanco.NumeroTarjeta || null,
-      respuestaBanco.NumeroAutorizacion || null,
       respuestaBanco.NombreEstado || null,
       respuestaBanco.Firma || null,
-      respuestaBanco.Mensaje || null,
+      respuestaBanco.Descripcion || null,
       trx.insertId,
     ]
   );
 
   // 5) Actualizar estatus del pago y de la cita según respuesta del banco
   const estadoBanco = (respuestaBanco.NombreEstado || "").toUpperCase();
-  const mensajeBanco = (respuestaBanco.Mensaje || "").toUpperCase();
+  const mensajeBanco = (
+    respuestaBanco.Descripcion || respuestaBanco.Mensaje || ""
+  ).toUpperCase();
 
   // Consideramos como aprobada: ACEPTADA, APROBADA, COMPLETADA
   // o mensajes con "ÉXITO" / "APROBADO"

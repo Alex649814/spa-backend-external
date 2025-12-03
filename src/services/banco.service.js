@@ -22,9 +22,8 @@ const enviarTransaccion = async (solicitud) => {
     Monto,
   } = solicitud;
 
-  // Payload que manda tu backend al banco
+  // Payload que manda tu backend al banco (nuevo contrato)
   const bodyBanco = {
-    NombreComercio: NOMBRE_COMERCIO,
     NumeroTarjetaOrigen,
     NumeroTarjetaDestino: NumeroTarjetaDestino || TARJETA_COMERCIO,
     NombreCliente,
@@ -32,38 +31,55 @@ const enviarTransaccion = async (solicitud) => {
     AnioExp,
     Cvv,
     Monto,
-    Moneda: "MXN",
   };
 
-  const url = BANK_API_URL; // ya trae /api/bank
+  const url = BANK_API_URL;
 
   console.log("[BANCO] Enviando solicitud a:", url);
   console.log("[BANCO] Body:", bodyBanco);
 
-  // Si aquí truena, dejamos que lance el error para que lo capture el controller
   const { data } = await axios.post(url, bodyBanco);
 
   console.log("[BANCO] Respuesta REAL:", data);
 
-  const idTransaccion =
-    data.IdTransaccion || data.id_transaccion || `TRX-${Date.now()}`;
+  // Normalizamos la respuesta al formato del nuevo contrato
+  const descripcion =
+    data.Descripcion ||
+    data.descripcion ||
+    data.Mensaje ||
+    data.mensaje ||
+    "";
 
-  // Normalizamos la respuesta a un formato consistente
+  const idTransaccion =
+    data.IdTransaccion ||
+    data.id_transaccion ||
+    data.idTransaccion ||
+    `TRX-${Date.now()}`;
+
   return {
-    NombreComercio: NOMBRE_COMERCIO,
-    CreadaUTC: data.CreadaUTC || new Date().toISOString(),
+    // Campos del contrato nuevo
+    CreadaUTC: data.CreadaUTC || data.creadaUTC || new Date().toISOString(),
     IdTransaccion: idTransaccion,
-    TipoTransaccion: data.TipoTransaccion || data.tipo_transaccion,
+    TipoTransaccion:
+      data.TipoTransaccion ||
+      data.tipoTransaccion ||
+      data.tipo_transaccion ||
+      "TRANSFERENCIA",
     MontoTransaccion:
-      data.MontoTransaccion ?? data.monto ?? data.montoTransaccion ?? Monto,
-    Moneda: data.Moneda || data.moneda || "MXN",
-    MarcaTarjeta: data.MarcaTarjeta || data.marcaTarjeta,
-    NumeroTarjeta: data.NumeroTarjeta || data.numeroTarjeta,
-    NumeroAutorizacion:
-      data.NumeroAutorizacion || data.numeroAutorizacion || data.Autorizacion,
-    NombreEstado: data.NombreEstado || data.nombreEstado,
-    Firma: data.Firma || data.firma,
-    Mensaje: data.Mensaje || data.mensaje,
+      data.MontoTransaccion ??
+      data.montoTransaccion ??
+      data.monto ??
+      Monto,
+    NumeroTarjeta: data.NumeroTarjeta || data.numeroTarjeta || null,
+    NombreEstado: data.NombreEstado || data.nombreEstado || null,
+    Firma: data.Firma || data.firma || null,
+    Descripcion: descripcion,
+
+    // Alias para compatibilidad
+    Mensaje: descripcion,
+
+    // Opcional: para logs/frontend
+    NombreComercio: NOMBRE_COMERCIO,
   };
 };
 
