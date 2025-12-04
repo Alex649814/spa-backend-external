@@ -1,5 +1,8 @@
 // src/services/banco.service.js
 import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Endpoint real de Bancarata
 const BANK_API_URL =
@@ -8,8 +11,9 @@ const BANK_API_URL =
 const NOMBRE_COMERCIO =
   process.env.BANCARATA_COMERCIO || "Dreams Kingdom SPA";
 
+// 💳 Tarjeta del comercio (SPA) donde se deposita el dinero
 const TARJETA_COMERCIO =
-  process.env.BANCARATA_TARJETA_COMERCIO || "0000 0009 8765 4321";
+  process.env.BANCARATA_TARJETA_COMERCIO || "4111111111111111";
 
 const enviarTransaccion = async (solicitud) => {
   const {
@@ -25,6 +29,7 @@ const enviarTransaccion = async (solicitud) => {
   // Payload que manda tu backend al banco (nuevo contrato)
   const bodyBanco = {
     NumeroTarjetaOrigen,
+    // Si no viene en la solicitud, usamos la tarjeta del comercio
     NumeroTarjetaDestino: NumeroTarjetaDestino || TARJETA_COMERCIO,
     NombreCliente,
     MesExp,
@@ -75,10 +80,10 @@ const enviarTransaccion = async (solicitud) => {
     Firma: data.Firma || data.firma || null,
     Descripcion: descripcion,
 
-    // Alias para compatibilidad
+    // Alias
     Mensaje: descripcion,
 
-    // Opcional: para logs/frontend
+    // Opcional para logs / front
     NombreComercio: NOMBRE_COMERCIO,
   };
 };

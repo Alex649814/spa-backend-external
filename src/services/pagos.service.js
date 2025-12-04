@@ -1,6 +1,16 @@
 // src/services/pagos.service.js
 import db from "../db/connection.js";
 import bancoService from "./banco.service.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+/**
+ * Tarjeta del comercio (SPA) donde se deposita el dinero.
+ * La leemos de .env, igual que en banco.service.js
+ */
+const TARJETA_COMERCIO =
+  process.env.BANCARATA_TARJETA_COMERCIO || "4111111111111111";
 
 /**
  * Envía una solicitud de pago al banco a partir de una cita.
@@ -10,20 +20,13 @@ import bancoService from "./banco.service.js";
  * 3) Llama a la API del banco (BANCARATA)
  * 4) Actualiza `transacciones_bancarias` con la respuesta real del banco
  * 5) Actualiza estatus de `pagos` y `citas`
- * 6) Regresa:
- *    - id_pago
- *    - id_transaccion_banco
- *    - id_transaccion_externa (id del banco)
- *    - respuesta_banco
- *    - estatus_pago
- *    - estatus_cita
  */
 const enviarAlBanco = async (payload) => {
   const {
     id_cita,
     monto,
-    numero_tarjeta_origen,
-    numero_tarjeta_destino,
+    numero_tarjeta_origen,      // 💳 tarjeta del cliente
+    // numero_tarjeta_destino YA NO lo esperamos del frontend
     nombre_cliente_tarjeta,
     mes_expiracion,
     anio_expiracion,
@@ -35,10 +38,8 @@ const enviarAlBanco = async (payload) => {
     throw new Error("id_cita y monto son obligatorios para solicitar el pago");
   }
 
-  if (!numero_tarjeta_origen || !numero_tarjeta_destino) {
-    throw new Error(
-      "Los números de tarjeta origen y destino son obligatorios"
-    );
+  if (!numero_tarjeta_origen) {
+    throw new Error("El número de tarjeta de origen es obligatorio");
   }
 
   // 1) Registrar el pago ligado a la cita
@@ -49,6 +50,7 @@ const enviarAlBanco = async (payload) => {
   );
 
   // 2) Registrar transacción bancaria (lo que ENVIAMOS al banco)
+  //    Guardamos la tarjeta del comercio como destino
   const [trx] = await db.query(
     `INSERT INTO transacciones_bancarias (
         id_pago,
@@ -64,7 +66,7 @@ const enviarAlBanco = async (payload) => {
     [
       pago.insertId,
       numero_tarjeta_origen,
-      numero_tarjeta_destino,
+      TARJETA_COMERCIO,         // 👈 SIEMPRE la tarjeta del SPA
       nombre_cliente_tarjeta,
       mes_expiracion,
       anio_expiracion,
@@ -76,7 +78,7 @@ const enviarAlBanco = async (payload) => {
   // 3) Llamar al BANCO real (BANCARATA)
   const respuestaBanco = await bancoService.enviarTransaccion({
     NumeroTarjetaOrigen: numero_tarjeta_origen,
-    NumeroTarjetaDestino: numero_tarjeta_destino,
+    NumeroTarjetaDestino: TARJETA_COMERCIO, // 👈 mismo destino
     NombreCliente: nombre_cliente_tarjeta,
     MesExp: mes_expiracion,
     AnioExp: anio_expiracion,
@@ -124,8 +126,6 @@ const enviarAlBanco = async (payload) => {
     respuestaBanco.Descripcion || respuestaBanco.Mensaje || ""
   ).toUpperCase();
 
-  // Consideramos como aprobada: ACEPTADA, APROBADA, COMPLETADA
-  // o mensajes con "ÉXITO" / "APROBADO"
   const aprobada =
     ["ACEPTADA", "APROBADA", "COMPLETADA"].includes(estadoBanco) ||
     mensajeBanco.includes("ÉXITO") ||
