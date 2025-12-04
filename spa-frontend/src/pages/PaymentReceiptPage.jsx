@@ -72,8 +72,10 @@ function PaymentReceiptPage() {
   const textoFechaPago = formatFechaHora(fechaPagoISO);
   const textoFechaSoloPago = formatSoloFecha(fechaPagoISO);
 
+  const estadoBanco = (banco?.NombreEstado || "").toUpperCase();
+
   const pagoConfirmado =
-    (banco?.NombreEstado || "").toUpperCase() === "ACEPTADA" ||
+    ["ACEPTADA", "APROBADA", "COMPLETADA"].includes(estadoBanco) ||
     estatus_pago === "APROBADO";
 
   const handleDescargarPagoPDF = () => {
@@ -159,9 +161,13 @@ function PaymentReceiptPage() {
                 <p className="status-subtitle">
                   {pagoConfirmado
                     ? `Número de referencia: ${
-                        banco?.NumeroAutorizacion || "AUTH-XXXXXX"
+                        banco?.IdTransaccion ||
+                        banco?.id_transaccion_externa ||
+                        "TRX-XXXXXX"
                       }`
-                    : banco?.Mensaje || "Contacta al establecimiento."}
+                    : banco?.Descripcion ||
+                      banco?.Mensaje ||
+                      "Contacta al establecimiento."}
                 </p>
               </div>
             </div>

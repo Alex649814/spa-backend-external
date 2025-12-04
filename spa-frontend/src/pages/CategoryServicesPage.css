@@ -119,14 +119,23 @@
   color: #444;
 }
 
+.col-duracion-header,
+.col-precio-header {
+  text-align: center;
+}
+
 /* Columna cantidad: contador - 0 + */
 .col-cantidad {
-  /* ancho fijo para que no se mueva nada */
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 4px;
-  width: 120px;
+  /* sin width fijo, que use la columna del grid */
+}
+
+/* Encabezado de la columna Cantidad alineado a la derecha */
+.col-cantidad-header {
+  text-align: right;
 }
 
 /* Botones y valor del contador */

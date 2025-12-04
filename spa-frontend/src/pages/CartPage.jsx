@@ -1,5 +1,4 @@
 // src/pages/CartPage.jsx
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBooking } from "../context/BookingContext.jsx";
 import "./CartPage.css";
@@ -14,44 +13,24 @@ function CartPage() {
 
   const navigate = useNavigate();
 
-  // Estado local para editar cantidades con los botones
-  const [localQuantities, setLocalQuantities] = useState({});
-
-  // Sincronizar cantidades locales con las del contexto
-  useEffect(() => {
-    const initial = {};
-    cartItems.forEach((item) => {
-      initial[item.key] = item.cantidad;
-    });
-    setLocalQuantities(initial);
-  }, [cartItems]);
-
+  // Cambiar cantidad directamente en el contexto
   const handleChangeQty = (itemKey, delta) => {
-    setLocalQuantities((prev) => {
-      const actual = prev[itemKey] ?? 0;
-      const nueva = Math.max(0, actual + delta);
-      return { ...prev, [itemKey]: nueva };
-    });
-  };
+    const item = cartItems.find((i) => i.key === itemKey);
+    if (!item) return;
 
-  const handleActualizarCarrito = () => {
-    cartItems.forEach((item) => {
-      const nuevaCantidad = localQuantities[item.key] ?? item.cantidad;
-      updateCartItemQuantity(item.key, nuevaCantidad);
-    });
+    const nuevaCantidad = Math.max(0, item.cantidad + delta);
+    updateCartItemQuantity(itemKey, nuevaCantidad);
   };
 
   const handleAgregarMasServicios = () => {
-    // Puedes cambiar esta ruta si tienes una página específica de catálogo
     navigate("/");
   };
 
   const handleProcederPagar = () => {
-    // Aquí rediriges a la página siguiente (reserva / pago)
     navigate("/reserva");
   };
 
-  if (cartItems.length === 0) {
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="cart-page">
         <h1 className="cart-title">Carrito de compras de servicios</h1>
@@ -80,44 +59,38 @@ function CartPage() {
               </tr>
             </thead>
             <tbody>
-              {cartItems.map((item) => {
-                const qty = localQuantities[item.key] ?? item.cantidad;
-                return (
-                  <tr key={item.key}>
-                    <td className="cart-service-name">{item.nombre}</td>
-                    <td>MX$ {item.precioUnitario.toFixed(2)}</td>
-                    <td>
-                      <div className="cart-qty-control">
-                        <button
-                          type="button"
-                          onClick={() => handleChangeQty(item.key, -1)}
-                        >
-                          −
-                        </button>
-                        <span>{qty}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleChangeQty(item.key, 1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </td>
-                    <td>MX$ {(item.precioUnitario * qty).toFixed(2)}</td>
-                  </tr>
-                );
-              })}
+              {cartItems.map((item) => (
+                <tr key={item.key}>
+                  <td className="cart-service-name">{item.nombre}</td>
+                  <td>MX$ {item.precioUnitario.toFixed(2)}</td>
+                  <td>
+                    <div className="cart-qty-control">
+                      <button
+                        type="button"
+                        onClick={() => handleChangeQty(item.key, -1)}
+                      >
+                        −
+                      </button>
+                      <span>{item.cantidad}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleChangeQty(item.key, 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </td>
+                  <td>MX$ {item.total.toFixed(2)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
           <div className="cart-actions-row">
-            <button
-              className="btn-secondary"
-              type="button"
-              onClick={handleActualizarCarrito}
-            >
+            {/* El botón de actualizar ya no es necesario */}
+            {/* <button className="btn-secondary" type="button">
               Actualizar carrito
-            </button>
+            </button> */}
             <button
               className="btn-link"
               type="button"

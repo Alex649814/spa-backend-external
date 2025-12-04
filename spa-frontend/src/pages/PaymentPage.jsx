@@ -111,7 +111,6 @@ function PaymentPage() {
       id_cita: idCita,
       monto: total,
       numero_tarjeta_origen: sanitizedCard,
-      numero_tarjeta_destino: "5555555555554444", // tarjeta del SPA (igual que en backend)
       nombre_cliente_tarjeta: cardName || citaInfo?.nombreCompleto,
       mes_expiracion: Number(expMonth),
       anio_expiracion: Number(expYear),
@@ -129,7 +128,6 @@ function PaymentPage() {
       const resp = await solicitarPago(payload);
       console.log("💳 Respuesta del backend/banco:", resp);
 
-      // Tu backend ya regresa estos campos:
       // id_pago, id_transaccion_banco, id_transaccion_externa,
       // respuesta_banco, estatus_pago, estatus_cita
       const banco = resp?.respuesta_banco || resp;
@@ -137,6 +135,8 @@ function PaymentPage() {
       // 👇 Nos basamos en el estatus que calcula tu backend
       if (resp.estatus_pago !== "APROBADO") {
         const msg =
+          banco?.Descripcion ||
+          banco?.descripcion ||
           banco?.Mensaje ||
           banco?.mensaje ||
           "El banco rechazó la transacción. Verifica los datos.";
@@ -162,10 +162,17 @@ function PaymentPage() {
       navigate("/comprobante");
     } catch (err) {
       console.error("Error al procesar el pago:", err);
+
+      const bankErr = err.response?.data?.banco;
       const msg =
+        bankErr?.Descripcion ||
+        bankErr?.descripcion ||
+        bankErr?.Mensaje ||
+        bankErr?.mensaje ||
         err.response?.data?.message ||
         err.response?.data?.error ||
         "Ocurrió un error al procesar el pago. Intenta de nuevo más tarde.";
+
       setErrorMsg(msg);
     } finally {
       setLoading(false);
