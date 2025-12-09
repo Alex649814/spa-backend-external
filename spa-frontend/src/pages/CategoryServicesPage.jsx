@@ -22,7 +22,7 @@ function CategoryServicesPage() {
 
   // Cargar servicios por categoría
   useEffect(() => {
-    async function cargar() {
+    async function cargarServicios() {
       try {
         const data = await getServiciosPorCategoria(idCategoria);
         setServicios(data || []);
@@ -32,22 +32,21 @@ function CategoryServicesPage() {
         setLoading(false);
       }
     }
-    cargar();
+    cargarServicios();
   }, [idCategoria]);
 
   // Cargar categoría (para nombre, descripción, imagen)
   useEffect(() => {
     async function cargarCategoria() {
-      if (!categoria) {
-        try {
-          const cats = await getCategorias();
-          const found = cats.find(
-            (c) => String(c.id_categoria) === String(idCategoria)
-          );
-          if (found) setCategoria(found);
-        } catch (err) {
-          console.error("Error cargando categoría:", err);
-        }
+      if (categoria) return;
+      try {
+        const cats = await getCategorias();
+        const found = cats.find(
+          (c) => String(c.id_categoria) === String(idCategoria)
+        );
+        if (found) setCategoria(found);
+      } catch (error) {
+        console.error("Error cargando categoría:", error);
       }
     }
     cargarCategoria();
@@ -79,11 +78,12 @@ function CategoryServicesPage() {
       return;
     }
 
-    // Opcional: limpiar cantidades después de agregar
-    // setCantidades({});
-
     // Ir a la pantalla de carrito
     navigate("/carrito");
+  };
+
+  const handleVolverCategorias = () => {
+    navigate("/");
   };
 
   if (loading) {
@@ -121,84 +121,94 @@ function CategoryServicesPage() {
       {/* BARRA CON TEXTO + BOTÓN "Más tratamientos" */}
       <div className="category-header-bar">
         <h2>SELECCIONA EL TRATAMIENTO</h2>
-        <button className="btn-volver" onClick={() => navigate("/")}>
+        <button className="btn-volver" onClick={handleVolverCategorias}>
           Más tratamientos
         </button>
       </div>
 
       {/* Si no hay servicios */}
-      {servicios.length === 0 && (
+      {servicios.length === 0 ? (
         <p>No hay servicios disponibles en esta categoría.</p>
-      )}
-
-      {/* TABLA DE SERVICIOS */}
-      {servicios.length > 0 && (
+      ) : (
         <>
-          <section className="services-table">
-            {/* Encabezados */}
-            <div className="services-header-row">
-              <div className="col-servicio-header">Servicio</div>
-              <div className="col-duracion-header">Duración</div>
-              <div className="col-precio-header">Precio</div>
-              <div className="col-cantidad-header">Cantidad</div>
+          {/* TARJETA BLANCA CON LA TABLA */}
+          <section className="category-services-card">
+            <div className="category-services-table-wrapper">
+              <table className="category-services-table">
+                <thead>
+                  <tr>
+                    <th>Servicio</th>
+                    <th>Duración</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {servicios.map((serv) => {
+                    const qty = cantidades[serv.id] || 0;
+                    const precio = Number(serv.precio || 0);
+                    const duracion = serv.duracion_minutos ?? "--";
+
+                    return (
+                      <tr key={serv.id}>
+                        <td>
+                          <div className="cat-service-name">{serv.nombre}</div>
+                          {serv.description && (
+                            <div className="cat-service-desc">
+                              {serv.description}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="cat-col-duracion">
+                          {duracion} Min.
+                        </td>
+
+                        <td className="cat-col-precio">
+                          MX$ {precio.toFixed(2)}
+                        </td>
+
+                        <td className="cat-col-cantidad">
+                          <div className="cat-qty-control">
+                            <button
+                              type="button"
+                              className="cat-qty-btn"
+                              onClick={() =>
+                                handleChangeCantidad(serv.id, -1)
+                              }
+                            >
+                              −
+                            </button>
+                            <span className="cat-qty-value">{qty}</span>
+                            <button
+                              type="button"
+                              className="cat-qty-btn"
+                              onClick={() =>
+                                handleChangeCantidad(serv.id, 1)
+                              }
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
-            {/* Filas */}
-            {servicios.map((serv) => {
-              const qty = cantidades[serv.id] || 0;
-              const precio = Number(serv.precio || 0);
-
-              return (
-                <div key={serv.id} className="service-row">
-                  {/* Servicio: nombre + descripción */}
-                  <div className="col-servicio">
-                    <div className="service-name">{serv.nombre}</div>
-                    {serv.description && (
-                      <div className="service-short-desc">
-                        {serv.description}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Duración */}
-                  <div className="col-duracion">
-                    {serv.duracion_minutos || "--"} Min.
-                  </div>
-
-                  {/* Precio */}
-                  <div className="col-precio">MX$ {precio.toFixed(2)}</div>
-
-                  {/* Cantidad: - 0 + */}
-                  <div className="col-cantidad">
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      onClick={() => handleChangeCantidad(serv.id, -1)}
-                    >
-                      −
-                    </button>
-                    <span className="qty-value">{qty}</span>
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      onClick={() => handleChangeCantidad(serv.id, 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {/* Botón grande abajo, ancho completo de la tarjeta */}
+            <div className="category-services-footer">
+              <button
+                className="btn-primary category-add-to-cart-btn"
+                type="button"
+                onClick={handleAgregarCarrito}
+              >
+                Agregar al carrito
+              </button>
+            </div>
           </section>
-
-          {/* Botón grande al final */}
-          <button
-            className="btn-primary btn-add-bottom"
-            type="button"
-            onClick={handleAgregarCarrito}
-          >
-            Agregar al carrito
-          </button>
         </>
       )}
     </div>

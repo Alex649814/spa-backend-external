@@ -1,3 +1,4 @@
+// src/pages/PaymentReceiptPage.jsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -30,14 +31,24 @@ function formatSoloFecha(iso) {
 
 function PaymentReceiptPage() {
   const navigate = useNavigate();
-  const { pagoInfo, clearCart, setPagoInfo } = useBooking();
+  const { pagoInfo, clearCart, setPagoInfo, setCitaInfo } = useBooking();
 
-  // Si no hay info de pago, regresamos al inicio
+  // 👉 Si no hay pagoInfo, regresamos al inicio.
+  // 👉 Si sí hay pagoInfo, limpiamos carrito y cita para el siguiente flujo.
   useEffect(() => {
     if (!pagoInfo) {
       navigate("/");
+      return;
     }
-  }, [pagoInfo, navigate]);
+
+    // Limpiar carrito (por si aún tenía cosas)
+    clearCart();
+
+    // Limpiar datos de la cita para que no se prellen nombre/fecha/hora
+    if (setCitaInfo) {
+      setCitaInfo(null);
+    }
+  }, [pagoInfo, navigate, clearCart, setCitaInfo]);
 
   if (!pagoInfo) return null;
 
@@ -56,13 +67,16 @@ function PaymentReceiptPage() {
 
   const nombreCliente =
     citaInfo?.nombreCompleto || banco?.NombreCliente || "Nombre del cliente";
+
   const servicioNombre =
     items[0]?.nombre || citaInfo?.servicioNombre || "Servicio reservado";
+
   const duracionMinutos =
-  citaInfo?.duracionMinutos ??
-  citaInfo?.duracion_minutos ??
-  items[0]?.raw?.duracion_minutos ??
-  60;
+    citaInfo?.duracionMinutos ??
+    citaInfo?.duracion_minutos ??
+    items[0]?.raw?.duracion_minutos ??
+    60;
+
   const fechaCita = citaInfo?.fechaCita || "-";
   const horaCita = citaInfo?.horaCita || "-";
   const codigoReserva =
@@ -88,9 +102,10 @@ function PaymentReceiptPage() {
     alert("Aquí iría la descarga del PDF de RESERVA (pendiente implementar).");
   };
 
-  // 👇 Nuevo: botón para volver al inicio y limpiar todo
+  // 👇 Botón para volver al inicio y dejar todo limpio
   const handleVolverInicio = () => {
     clearCart();
+    if (setCitaInfo) setCitaInfo(null);
     if (setPagoInfo) setPagoInfo(null);
     navigate("/");
   };
@@ -161,9 +176,7 @@ function PaymentReceiptPage() {
                 <p className="status-subtitle">
                   {pagoConfirmado
                     ? `Número de referencia: ${
-                        banco?.IdTransaccion ||
-                        banco?.id_transaccion_externa ||
-                        "TRX-XXXXXX"
+                        banco?.NumeroAutorizacion || "AUTH-XXXXXX"
                       }`
                     : banco?.Descripcion ||
                       banco?.Mensaje ||
@@ -258,7 +271,7 @@ function PaymentReceiptPage() {
         </section>
       </main>
 
-      {/* 👇 Botón global para volver al inicio y limpiar carrito */}
+      {/* Botón global para volver al inicio y limpiar todo */}
       <div className="receipt-back-row">
         <button
           type="button"

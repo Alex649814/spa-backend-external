@@ -1,4 +1,4 @@
-/* src/pages/CategoryServicesPage.css */
+/* ============ PÁGINA DE SERVICIOS POR CATEGORÍA ============ */
 
 .category-page {
   padding: 40px 70px;
@@ -61,85 +61,106 @@
   font-weight: 600;
 }
 
-/* “TABLA” DE SERVICIOS */
-.services-table {
-  background: #fff;
+/* TARJETA BLANCA QUE CONTIENE LA TABLA */
+.category-services-card {
+  background: #ffffff;
   border-radius: 12px;
   border: 1px solid #ddd;
-  padding: 20px 25px 10px;
+  padding: 20px 24px 18px;
 }
 
-/* Encabezado de columnas */
-.services-header-row {
-  display: grid;
-  grid-template-columns: 2.8fr 1fr 1fr 0.9fr;
+/* Wrapper por si la tabla necesita scroll horizontal en móviles */
+.category-services-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* TABLA PRINCIPAL */
+.category-services-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 700px; /* para que las columnas mantengan proporción */
+}
+
+.category-services-table thead th {
   font-weight: 600;
   font-size: 16px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 8px;
-}
-
-.col-servicio-header,
-.col-duracion-header,
-.col-precio-header,
-.col-cantidad-header {
   color: #3b3b3b;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 6px;
 }
 
-/* Cada fila de servicio */
-.service-row {
-  display: grid;
-  grid-template-columns: 2.8fr 1fr 1fr 0.9fr;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
+/* Anchos de columnas */
+.category-services-table thead th:nth-child(1),
+.category-services-table tbody td:nth-child(1) {
+  width: 55%;
+  text-align: left;
+}
+
+.category-services-table thead th:nth-child(2),
+.category-services-table tbody td:nth-child(2) {
+  width: 15%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.category-services-table thead th:nth-child(3),
+.category-services-table tbody td:nth-child(3) {
+  width: 15%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.category-services-table thead th:nth-child(4),
+.category-services-table tbody td:nth-child(4) {
+  width: 15%;
+  text-align: center;
+}
+
+/* Filas del cuerpo */
+.category-services-table tbody td {
+  padding: 10px 6px;
   font-size: 16px;
+  border-bottom: 1px solid #eee;
 }
 
-/* Columna "Servicio" */
-.col-servicio {
-  padding-right: 15px;
-}
-
-.service-name {
+/* Columna "Servicio": nombre + descripción */
+.cat-service-name {
   font-weight: 600;
   margin-bottom: 4px;
 }
 
-.service-short-desc {
+.cat-service-desc {
   font-size: 14px;
   color: #555;
 }
 
-/* Duración y precio */
-.col-duracion,
-.col-precio {
+/* Columnas de duración, precio y cantidad */
+.cat-col-duracion {
   font-size: 15px;
   color: #444;
 }
 
-.col-duracion-header,
-.col-precio-header {
+.cat-col-precio {
+  font-size: 15px;
+  color: #444;
+}
+
+.cat-col-cantidad {
   text-align: center;
 }
 
-/* Columna cantidad: contador - 0 + */
-.col-cantidad {
-  display: flex;
-  justify-content: flex-end;
+/* Controles de cantidad */
+.cat-qty-control {
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  /* sin width fijo, que use la columna del grid */
+  justify-content: center;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-/* Encabezado de la columna Cantidad alineado a la derecha */
-.col-cantidad-header {
-  text-align: right;
-}
-
-/* Botones y valor del contador */
-.qty-btn {
+.cat-qty-btn {
   width: 32px;
   height: 28px;
   border: 1px solid #b2b2b2;
@@ -149,50 +170,36 @@
   line-height: 1;
   padding: 0;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
-.qty-btn:focus {
+.cat-qty-btn:focus {
   outline: none;
 }
 
-.qty-value {
-  display: inline-block;
-  min-width: 30px;
+.cat-qty-value {
+  min-width: 32px;
   text-align: center;
   border-top: 1px solid #b2b2b2;
   border-bottom: 1px solid #b2b2b2;
+  background: #ffffff;
   padding: 3px 6px;
-  background: #fff;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
-/* Botón grande al final (Agregar al carrito) */
-.btn-primary {
-  margin-top: 25px;
+/* Pie de la tarjeta: botón grande */
+.category-services-footer {
+  margin-top: 18px;
+}
+
+.category-add-to-cart-btn {
   width: 100%;
   padding: 14px;
-  background: #b49a79;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
   font-size: 18px;
   font-weight: 600;
 }
 
-.btn-primary:hover {
-  filter: brightness(1.05);
-}
+/* ============ RESPONSIVE ============ */
 
-/* Por si quieres clases extra para el botón inferior */
-.btn-add-bottom {
-  margin-top: 25px;
-  margin-bottom: 40px;
-}
-
-/* Responsive */
 @media (max-width: 900px) {
   .category-page {
     padding: 25px 15px;
@@ -202,30 +209,8 @@
     grid-template-columns: 1fr;
   }
 
-  .services-header-row,
-  .service-row {
-    grid-template-columns: 1.8fr 1fr;
-    row-gap: 6px;
-  }
-
-  .col-duracion-header,
-  .col-precio-header,
-  .col-cantidad-header {
-    display: none;
-  }
-
-  .col-precio,
-  .col-cantidad {
-    justify-self: flex-start;
-  }
-
-  .col-duracion,
-  .col-precio {
-    margin-top: 4px;
-  }
-
-  .col-cantidad {
-    margin-top: 6px;
-    width: auto;
+  /* En móviles que la tabla sea desplazable horizontalmente */
+  .category-services-table {
+    min-width: 600px;
   }
 }
