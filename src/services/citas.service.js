@@ -91,15 +91,22 @@ const registrarVenta = async (payload) => {
   }
 
   // 4. Determinar estatus inicial según payment_status
-  let estatusCita = "PENDIENTE_PAGO";
-  if (payment_status) {
-    const s = String(payment_status).toUpperCase();
-    if (["PAGADO", "PAGADA", "ACEPTADA", "APROBADA"].includes(s)) {
-      estatusCita = "CONFIRMADA";
-    } else if (["RECHAZADA", "CANCELADA"].includes(s)) {
-      estatusCita = "CANCELADA";
-    }
+  // 4. Determinar estatus inicial según payment_status
+let estatusCita = "CONFIRMADA"; // ahora la default es CONFIRMADA
+
+if (payment_status) {
+  const s = String(payment_status).toUpperCase();
+
+  // Si explícitamente te dicen que fue rechazada/cancelada
+  if (["RECHAZADA", "CANCELADA"].includes(s)) {
+    estatusCita = "CANCELADA";
   }
+
+  // (Opcional) Si quieres seguir manejando PENDIENTE_PAGO cuando venga así:
+  else if (["PENDIENTE_PAGO", "PENDIENTE"].includes(s)) {
+    estatusCita = "PENDIENTE_PAGO";
+  }
+}
 
   // 5. Crear la cita
   const horaNormalizada =
